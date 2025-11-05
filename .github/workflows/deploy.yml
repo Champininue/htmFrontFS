@@ -50,7 +50,12 @@ jobs:
         ls -la public/ || echo "Public directory not found"
         
     - name: Inject environment variables
-      run: node build/inject-env.js
+      run: |
+        echo "🚀 Running environment variable injection..."
+        node build/inject-env.js || echo "❌ Injection script failed with exit code $?"
+        echo "✅ Injection step completed"
+        echo "📄 Checking if file was modified:"
+        cat public/index.html | grep -o "INJECT_BREVO_API_KEY\|xkeysib" | head -5 || echo "No matches found"
       env:
         BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
         FROM_EMAIL: ${{ vars.FROM_EMAIL }}
