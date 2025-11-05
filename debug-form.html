@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Contact Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; }
+        .error { color: red; margin-top: 10px; }
+        .success { color: green; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Debug Contact Form Test</h1>
+    
+    <div id="debugInfo" style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+        <h3>Debug Information:</h3>
+        <div id="debugOutput"></div>
+    </div>
+
+    <form id="testForm">
+        <div class="form-group">
+            <label>Name:</label>
+            <input type="text" id="name" value="Test User" required>
+        </div>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="email" value="test@example.com" required>
+        </div>
+        <div class="form-group">
+            <label>Subject:</label>
+            <select id="subject">
+                <option value="test">Test</option>
+                <option value="project">Project</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Message:</label>
+            <textarea id="message" rows="4" required>This is a test message</textarea>
+        </div>
+        <button type="submit">Test Submit</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        // Debug API Configuration (same as your main site)
+        const API_CONFIG = {
+            CONTACT_ENDPOINT: 'https://apinet-cpxlhij2x-rs-projects-27d1b92f.vercel.app/api/contact',
+            RECAPTCHA_SITE_KEY: 'YOUR_RECAPTCHA_SITE_KEY_HERE',
+            REQUIRES_AUTH: false,
+            API_KEY: null
+        };
+
+        function debugLog(message) {
+            const debugOutput = document.getElementById('debugOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            debugOutput.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+        }
+
+        // Check if all variables are available
+        debugLog(`✓ API_CONFIG defined: ${typeof API_CONFIG !== 'undefined'}`);
+        debugLog(`✓ API_CONFIG.CONTACT_ENDPOINT: ${API_CONFIG.CONTACT_ENDPOINT}`);
+        debugLog(`✓ fetch available: ${typeof fetch !== 'undefined'}`);
+        debugLog(`⚠ grecaptcha available: ${typeof grecaptcha !== 'undefined'}`);
+
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            debugLog('🚀 Form submission started');
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div style="color: blue;">Testing...</div>';
+
+            try {
+                const formData = {
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    subject: document.getElementById('subject').value,
+                    message: document.getElementById('message').value,
+                    updates: false,
+                    recaptcha: 'test_token_debug',
+                    timestamp: new Date().toISOString(),
+                    source: 'debug_test'
+                };
+
+                debugLog(`📦 Form data prepared: ${JSON.stringify(formData, null, 2)}`);
+
+                const response = await fetch(API_CONFIG.CONTACT_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                    mode: 'cors'
+                });
+
+                debugLog(`📡 Response received: ${response.status} ${response.statusText}`);
+                
+                const responseText = await response.text();
+                debugLog(`📄 Response body: ${responseText.substring(0, 200)}...`);
+
+                if (response.ok) {
+                    resultDiv.innerHTML = '<div class="success">✅ API call successful!</div>';
+                } else {
+                    resultDiv.innerHTML = `<div class="error">⚠️ API returned ${response.status}: ${responseText}</div>`;
+                }
+
+            } catch (error) {
+                debugLog(`❌ Error occurred: ${error.message}`);
+                resultDiv.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        });
+
+        // Test reCAPTCHA availability after page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                debugLog(`🔒 grecaptcha after load: ${typeof grecaptcha !== 'undefined'}`);
+                if (typeof grecaptcha !== 'undefined' && grecaptcha.execute) {
+                    debugLog('✓ reCAPTCHA execute function available');
+                } else {
+                    debugLog('⚠️ reCAPTCHA not properly loaded');
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
