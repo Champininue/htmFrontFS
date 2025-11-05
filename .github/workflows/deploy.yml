@@ -28,6 +28,11 @@ jobs:
       with:
         node-version: '18'
         
+    - name: Create public directory and copy files
+      run: |
+        mkdir -p public
+        cp index.html public/
+        
     - name: Inject environment variables
       run: node build/inject-env.js
       env:
