@@ -65,11 +65,8 @@ if (fs.existsSync(htmlFile)) {
         }
     });
     
-    // Add a timestamp comment to verify the injection ran
-    content = content.replace(
-        '📅 Build timestamp: 2025-11-05 21:57 (TEST)',
-        `📅 Build timestamp: ${new Date().toISOString()} (INJECTED)`
-    );
+    // Append a build marker comment to verify injection ran and aid cache busting
+    content += `\n<!-- build: ${new Date().toISOString()} -->\n`;
     
     fs.writeFileSync(htmlFile, content, 'utf8');
     console.log('✨ Environment variables injected successfully!');
