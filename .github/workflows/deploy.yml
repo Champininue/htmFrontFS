@@ -29,13 +29,11 @@ jobs:
         node-version: '18'
         
     - name: Inject environment variables
-      run: |
-        echo "🔧 Injecting environment variables..."
-        node build/inject-env.js
+      run: node build/inject-env.js
       env:
         BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
-        FROM_EMAIL: ${{ vars.FROM_EMAIL || 'noreply@ship.brevo.com' }}
-        TO_EMAIL: ${{ vars.TO_EMAIL || 'ireactpro@gmail.com' }}
+        FROM_EMAIL: ${{ vars.FROM_EMAIL }}
+        TO_EMAIL: ${{ vars.TO_EMAIL }}
         RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}
         
     - name: Setup Pages

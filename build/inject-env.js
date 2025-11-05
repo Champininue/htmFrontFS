@@ -5,13 +5,21 @@ const path = require('path');
 
 console.log('🔧 Injecting GitHub environment variables into HTML files...');
 
-// Get environment variables from GitHub Actions
+// Get environment variables from GitHub Actions (with fallbacks)
 const envVars = {
     BREVO_API_KEY: process.env.BREVO_API_KEY || '',
     FROM_EMAIL: process.env.FROM_EMAIL || 'noreply@ship.brevo.com',
     TO_EMAIL: process.env.TO_EMAIL || 'ireactpro@gmail.com',
     RECAPTCHA_SITE_KEY: process.env.RECAPTCHA_SITE_KEY || ''
 };
+
+// Log what we're working with
+console.log('🔍 Environment variable status:');
+console.log(`  BREVO_API_KEY: ${envVars.BREVO_API_KEY ? '✅ Set' : '❌ Missing (will use fallback)'}`);
+console.log(`  FROM_EMAIL: ${envVars.FROM_EMAIL}`);
+console.log(`  TO_EMAIL: ${envVars.TO_EMAIL}`);
+console.log(`  RECAPTCHA_SITE_KEY: ${envVars.RECAPTCHA_SITE_KEY ? '✅ Set' : '❌ Missing'}`);
+console.log('');
 
 console.log('Environment variables:');
 Object.entries(envVars).forEach(([key, value]) => {
