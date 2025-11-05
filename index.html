@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- reCAPTCHA v3 - Temporarily disabled for testing -->
-    <!-- <script src="https://www.google.com/recaptcha/api.js?render=YOUR_RECAPTCHA_SITE_KEY_HERE"></script> -->
-
+    <!-- reCAPTCHA v3 script will be loaded dynamically when needed -->
+    
     <meta name="description" content="פורטפוליו מקצועי של מפתח Full Stack המתמחה ב-React, Node.js, Python ואינטגרציות AI">
     <title>פורטפוליו מתקדם - מפתח Full Stack &amp; AI</title>
     <style>
@@ -2087,8 +2086,8 @@ body {
 const API_CONFIG = {
     // Your Vercel function endpoint
     CONTACT_ENDPOINT: 'https://apinet-cpxlhij2x-rs-projects-27d1b92f.vercel.app/api/contact',
-    // reCAPTCHA temporarily disabled for testing
-    RECAPTCHA_SITE_KEY: null,
+    // TODO: Replace with your actual reCAPTCHA site key  
+    RECAPTCHA_SITE_KEY: 'YOUR_RECAPTCHA_SITE_KEY_HERE',
     // Vercel functions don't typically require auth headers
     REQUIRES_AUTH: false,
     // API key not needed for Vercel functions
