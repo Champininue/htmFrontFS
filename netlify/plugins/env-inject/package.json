@@ -1,0 +1,6 @@
+{
+  "name": "netlify-plugin-env-inject",
+  "version": "1.0.0",
+  "description": "Inject environment variables into HTML files during Netlify build",
+  "main": "index.js"
+}

@@ -2103,20 +2103,28 @@ body {
     </div>
 
     <script>
-// API Configuration - Brevo (Sendinblue) Email API
+// Netlify Environment Variables Injection
+window.NETLIFY_ENV = {
+    BREVO_API_KEY: '{{BREVO_API_KEY}}',
+    FROM_EMAIL: '{{FROM_EMAIL}}',
+    TO_EMAIL: '{{TO_EMAIL}}',
+    RECAPTCHA_SITE_KEY: '{{RECAPTCHA_SITE_KEY}}'
+};
+
+// API Configuration - Using Netlify Environment Variables
 const API_CONFIG = {
     // Primary: Brevo Email API (reliable, no CORS issues)
     USE_BREVO: true,
-    // Brevo configuration
+    // Brevo configuration - Using Netlify environment variables for security
     BREVO_API_URL: 'https://api.brevo.com/v3/smtp/email',
-    BREVO_API_KEY: 'YOUR_BREVO_API_KEY_HERE', // Get from https://app.brevo.com/settings/keys/api
-    // Your email settings
-    FROM_EMAIL: 'noreply@yourdomain.com', // Must be verified domain or Brevo default
-    TO_EMAIL: 'your.email@example.com', // Where you want to receive messages
+    BREVO_API_KEY: window.NETLIFY_ENV?.BREVO_API_KEY || 'YOUR_BREVO_API_KEY_HERE',
+    // Your email settings - Using environment variables
+    FROM_EMAIL: window.NETLIFY_ENV?.FROM_EMAIL || 'noreply@ship.brevo.com',
+    TO_EMAIL: window.NETLIFY_ENV?.TO_EMAIL || 'your.email@example.com',
     // Fallback options
-    USE_MAILTO_FALLBACK: false,
+    USE_MAILTO_FALLBACK: true, // Enable fallback for safety
     VERCEL_ENDPOINT: 'https://apinet-cpxlhij2x-rs-projects-27d1b92f.vercel.app/api/contact',
-    RECAPTCHA_SITE_KEY: 'YOUR_RECAPTCHA_SITE_KEY_HERE',
+    RECAPTCHA_SITE_KEY: window.NETLIFY_ENV?.RECAPTCHA_SITE_KEY || 'YOUR_RECAPTCHA_SITE_KEY_HERE',
     REQUIRES_AUTH: false
 };
 

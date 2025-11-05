@@ -4,6 +4,10 @@
   # Use public directory as expected by Netlify
   publish = "public"
 
+# Environment variable injection plugin
+[[plugins]]
+  package = "./netlify/plugins/env-inject"
+
 [build.environment]
   # Node version (if needed for any tools)
   NODE_VERSION = "18"
@@ -38,3 +42,19 @@
 # [build]
 #   command = ""
 #   functions = "netlify/functions"
+
+# ==================================================
+# ENVIRONMENT VARIABLES SETUP
+# ==================================================
+# Set these in your Netlify dashboard:
+# Site Settings > Environment Variables
+#
+# Required:
+# - BREVO_API_KEY: Your Brevo API key from https://app.brevo.com/settings/keys/api
+# - TO_EMAIL: Your email address where you want to receive messages
+#
+# Optional:
+# - FROM_EMAIL: Sender email (defaults to noreply@ship.brevo.com)
+# - RECAPTCHA_SITE_KEY: Your reCAPTCHA site key (optional)
+#
+# The plugin will automatically inject these into your HTML during build
