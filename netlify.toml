@@ -7,6 +7,8 @@
 [build.environment]
   # Node version (if needed for any tools)
   NODE_VERSION = "18"
+  # Disable secrets scanning for environment variable injection
+  SECRETS_SCAN_ENABLED = "false"
 
 # Redirect rules (optional)
 [[redirects]]
