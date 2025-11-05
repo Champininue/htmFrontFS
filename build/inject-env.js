@@ -4,6 +4,14 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('🔧 Injecting GitHub environment variables into HTML files...');
+console.log('🔍 Raw environment variables from process.env:');
+console.log('  BREVO_API_KEY exists:', !!process.env.BREVO_API_KEY);
+console.log('  FROM_EMAIL:', process.env.FROM_EMAIL);
+console.log('  TO_EMAIL:', process.env.TO_EMAIL);
+console.log('  RECAPTCHA_SITE_KEY exists:', !!process.env.RECAPTCHA_SITE_KEY);
+console.log('  All env vars:', Object.keys(process.env).filter(key => 
+    key.includes('BREVO') || key.includes('FROM_EMAIL') || key.includes('TO_EMAIL') || key.includes('RECAPTCHA')
+));
 
 // Get environment variables from GitHub Actions (with fallbacks)
 const envVars = {
