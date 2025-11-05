@@ -43,12 +43,21 @@ Object.entries(envVars).forEach(([key, value]) => {
     }
 });
 
-// File to process
-const htmlFile = path.join(__dirname, '../public/index.html');
+// Files to process (process both if they exist)
+const files = [
+    path.join(__dirname, '../public/index.html'),
+    path.join(__dirname, '../index.html'),
+];
 
-if (fs.existsSync(htmlFile)) {
+let processedAny = false;
+for (const htmlFile of files) {
+    if (!fs.existsSync(htmlFile)) {
+        console.log(`⏭️  Skipping missing file: ${htmlFile}`);
+        continue;
+    }
+    processedAny = true;
     console.log(`✅ Processing: ${htmlFile}`);
-    
+  
     let content = fs.readFileSync(htmlFile, 'utf8');
     
     // Replace environment variable placeholders
@@ -74,19 +83,20 @@ if (fs.existsSync(htmlFile)) {
     if (leftovers) {
         console.error('❌ Placeholder tokens still present after injection:', Array.from(new Set(leftovers)));
         fs.writeFileSync(htmlFile, content, 'utf8');
-        // Dump a small slice around the first occurrence for debugging
         const idx = content.indexOf(leftovers[0]);
         const start = Math.max(0, idx - 200);
         const end = Math.min(content.length, idx + 200);
-        console.error('🔎 Context around first leftover token:\n', content.slice(start, end));
+        console.error('🔎 Context around first leftover token in', htmlFile, '\n', content.slice(start, end));
         process.exit(2);
     }
-    
+
     fs.writeFileSync(htmlFile, content, 'utf8');
     console.log('✨ Environment variables injected successfully!');
     console.log('📝 File written to:', htmlFile);
     console.log('📊 Final content length:', content.length);
-} else {
-    console.error(`❌ File not found: ${htmlFile}`);
+}
+
+if (!processedAny) {
+    console.error('❌ No target HTML files found to inject. Checked:', files);
     process.exit(1);
 }

@@ -29,12 +29,17 @@ jobs:
       with:
         node-version: '18'
         
-    - name: Create public directory and copy files
+    - name: Prepare public artifact
       run: |
-        mkdir -p public
-        cp index.html public/
-        # Optional: copy other static probes if needed
-        # cp index.min.html public/index.min.html || true
+        echo "📦 Preparing artifact for Pages..."
+        if [ -f public/index.html ]; then
+          echo "✅ Using existing public/index.html"
+        else
+          echo "ℹ️ public/index.html not found, copying from repository root"
+          mkdir -p public
+          cp index.html public/
+        fi
+        ls -la public/
         
     - name: Debug environment setup
       run: |
