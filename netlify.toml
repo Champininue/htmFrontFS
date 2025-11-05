@@ -1,6 +1,8 @@
 [build]
   # No build command needed for static site
   command = ""
+  # Use public directory as expected by Netlify
+  publish = "public"
 
 [build.environment]
   # Node version (if needed for any tools)
