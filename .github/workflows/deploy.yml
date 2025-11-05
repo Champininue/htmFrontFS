@@ -40,6 +40,14 @@ jobs:
         echo "BREVO_API_KEY exists: ${{ secrets.BREVO_API_KEY != '' }}"
         echo "FROM_EMAIL exists: ${{ vars.FROM_EMAIL != '' }}"
         echo "TO_EMAIL exists: ${{ vars.TO_EMAIL != '' }}"
+        echo "📁 Current directory: $(pwd)"
+        echo "📋 Directory contents:"
+        ls -la
+        echo "🔧 Build directory contents:"
+        ls -la build/
+        echo "📄 inject-env.js exists: $(test -f build/inject-env.js && echo 'YES' || echo 'NO')"
+        echo "🏗️ Public directory before injection:"
+        ls -la public/ || echo "Public directory not found"
         
     - name: Inject environment variables
       run: node build/inject-env.js
