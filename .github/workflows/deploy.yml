@@ -18,6 +18,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: github-pages
     
     steps:
     - name: Checkout
@@ -32,6 +33,13 @@ jobs:
       run: |
         mkdir -p public
         cp index.html public/
+        
+    - name: Debug environment setup
+      run: |
+        echo "🔍 Checking environment variable availability..."
+        echo "BREVO_API_KEY exists: ${{ secrets.BREVO_API_KEY != '' }}"
+        echo "FROM_EMAIL exists: ${{ vars.FROM_EMAIL != '' }}"
+        echo "TO_EMAIL exists: ${{ vars.TO_EMAIL != '' }}"
         
     - name: Inject environment variables
       run: node build/inject-env.js
