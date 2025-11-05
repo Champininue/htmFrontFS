@@ -2126,17 +2126,17 @@ const API_CONFIG = {
     BREVO_API_URL: 'https://api.brevo.com/v3/smtp/email',
     
     // Environment variables injected by GitHub Actions
-    BREVO_API_KEY: (window.GITHUB_ENV?.BREVO_API_KEY && window.GITHUB_ENV.BREVO_API_KEY !== 'INJECT_BREVO_API_KEY') 
-        ? window.GITHUB_ENV.BREVO_API_KEY 
+  BREVO_API_KEY: ((window.GITHUB_ENV && window.GITHUB_ENV.BREVO_API_KEY) && window.GITHUB_ENV.BREVO_API_KEY !== 'INJECT_BREVO_API_KEY') 
+    ? window.GITHUB_ENV.BREVO_API_KEY 
         : '',
-    FROM_EMAIL: (window.GITHUB_ENV?.FROM_EMAIL && window.GITHUB_ENV.FROM_EMAIL !== 'INJECT_FROM_EMAIL') 
-        ? window.GITHUB_ENV.FROM_EMAIL 
+  FROM_EMAIL: ((window.GITHUB_ENV && window.GITHUB_ENV.FROM_EMAIL) && window.GITHUB_ENV.FROM_EMAIL !== 'INJECT_FROM_EMAIL') 
+    ? window.GITHUB_ENV.FROM_EMAIL 
         : 'noreply@ship.brevo.com',
-    TO_EMAIL: (window.GITHUB_ENV?.TO_EMAIL && window.GITHUB_ENV.TO_EMAIL !== 'INJECT_TO_EMAIL') 
-        ? window.GITHUB_ENV.TO_EMAIL 
+  TO_EMAIL: ((window.GITHUB_ENV && window.GITHUB_ENV.TO_EMAIL) && window.GITHUB_ENV.TO_EMAIL !== 'INJECT_TO_EMAIL') 
+    ? window.GITHUB_ENV.TO_EMAIL 
         : 'optimussdf619@gmail.com',
-    RECAPTCHA_SITE_KEY: (window.GITHUB_ENV?.RECAPTCHA_SITE_KEY && window.GITHUB_ENV.RECAPTCHA_SITE_KEY !== 'INJECT_RECAPTCHA_SITE_KEY') 
-        ? window.GITHUB_ENV.RECAPTCHA_SITE_KEY 
+  RECAPTCHA_SITE_KEY: ((window.GITHUB_ENV && window.GITHUB_ENV.RECAPTCHA_SITE_KEY) && window.GITHUB_ENV.RECAPTCHA_SITE_KEY !== 'INJECT_RECAPTCHA_SITE_KEY') 
+    ? window.GITHUB_ENV.RECAPTCHA_SITE_KEY 
         : '',
         
     // Fallback configuration
@@ -2146,11 +2146,11 @@ const API_CONFIG = {
 // Debug: Show current configuration
 console.log('🔧 Contact Form Configuration (GitHub Pages):');
 console.log('Raw GITHUB_ENV:', window.GITHUB_ENV);
-console.log('BREVO_API_KEY raw value:', window.GITHUB_ENV?.BREVO_API_KEY);
-console.log('Environment variables available:', !!window.GITHUB_ENV?.BREVO_API_KEY);
+console.log('BREVO_API_KEY raw value:', (window.GITHUB_ENV && window.GITHUB_ENV.BREVO_API_KEY));
+console.log('Environment variables available:', !!(window.GITHUB_ENV && window.GITHUB_ENV.BREVO_API_KEY));
 console.log('Using Brevo API:', API_CONFIG.USE_BREVO);
 console.log('API Key configured:', !!API_CONFIG.BREVO_API_KEY);
-console.log('API Key length:', API_CONFIG.BREVO_API_KEY?.length || 0);
+console.log('API Key length:', (API_CONFIG.BREVO_API_KEY ? API_CONFIG.BREVO_API_KEY.length : 0));
 console.log('TO_EMAIL:', API_CONFIG.TO_EMAIL);
 console.log('FROM_EMAIL:', API_CONFIG.FROM_EMAIL);
         console.log('🎯 Ready for GitHub Pages deployment with Brevo integration!');
