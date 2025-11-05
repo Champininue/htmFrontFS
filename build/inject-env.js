@@ -67,6 +67,20 @@ if (fs.existsSync(htmlFile)) {
     
     // Append a build marker comment to verify injection ran and aid cache busting
     content += `\n<!-- build: ${new Date().toISOString()} -->\n`;
+
+    // Sanity check: ensure no placeholders remain
+    const placeholderRegex = /INJECT_(BREVO_API_KEY|FROM_EMAIL|TO_EMAIL|RECAPTCHA_SITE_KEY)/g;
+    const leftovers = content.match(placeholderRegex);
+    if (leftovers) {
+        console.error('❌ Placeholder tokens still present after injection:', Array.from(new Set(leftovers)));
+        fs.writeFileSync(htmlFile, content, 'utf8');
+        // Dump a small slice around the first occurrence for debugging
+        const idx = content.indexOf(leftovers[0]);
+        const start = Math.max(0, idx - 200);
+        const end = Math.min(content.length, idx + 200);
+        console.error('🔎 Context around first leftover token:\n', content.slice(start, end));
+        process.exit(2);
+    }
     
     fs.writeFileSync(htmlFile, content, 'utf8');
     console.log('✨ Environment variables injected successfully!');
