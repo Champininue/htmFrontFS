@@ -1,12 +1,8 @@
 [build]
-  # No build command needed for static site
-  command = ""
+  # Build command to inject environment variables
+  command = "bash build/inject-env.sh"
   # Use public directory as expected by Netlify
   publish = "public"
-
-# Environment variable injection plugin
-[[plugins]]
-  package = "./netlify/plugins/env-inject"
 
 [build.environment]
   # Node version (if needed for any tools)
