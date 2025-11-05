@@ -7,6 +7,7 @@
     
     <meta name="description" content="פורטפוליו מקצועי של מפתח Full Stack המתמחה ב-React, Node.js, Python ואינטגרציות AI">
     <title>פורטפוליו מתקדם - מפתח Full Stack &amp; AI</title>
+  <link rel="icon" href="data:,">
     <style>
 /* Design System Variables */
 :root {
@@ -2119,26 +2120,23 @@ if (window.GITHUB_ENV.BREVO_API_KEY === 'INJECT_BREVO_API_KEY') {
     // window.GITHUB_ENV.BREVO_API_KEY = 'xkeysib-your-api-key-here';
 }
 
+// Compute environment values safely (avoid parser issues on some browsers)
+var injected = window.GITHUB_ENV || {};
+var BREVO_API_KEY = (injected.BREVO_API_KEY && injected.BREVO_API_KEY !== 'INJECT_BREVO_API_KEY') ? injected.BREVO_API_KEY : '';
+var FROM_EMAIL = (injected.FROM_EMAIL && injected.FROM_EMAIL !== 'INJECT_FROM_EMAIL') ? injected.FROM_EMAIL : 'noreply@ship.brevo.com';
+var TO_EMAIL = (injected.TO_EMAIL && injected.TO_EMAIL !== 'INJECT_TO_EMAIL') ? injected.TO_EMAIL : 'optimussdf619@gmail.com';
+var RECAPTCHA_SITE_KEY = (injected.RECAPTCHA_SITE_KEY && injected.RECAPTCHA_SITE_KEY !== 'INJECT_RECAPTCHA_SITE_KEY') ? injected.RECAPTCHA_SITE_KEY : '';
+
 // API Configuration - GitHub Pages with Brevo Email API
 const API_CONFIG = {
     // Primary: Brevo Email API (professional email delivery)
     USE_BREVO: true,
     BREVO_API_URL: 'https://api.brevo.com/v3/smtp/email',
-    
     // Environment variables injected by GitHub Actions
-  BREVO_API_KEY: ((window.GITHUB_ENV && window.GITHUB_ENV.BREVO_API_KEY) && window.GITHUB_ENV.BREVO_API_KEY !== 'INJECT_BREVO_API_KEY') 
-    ? window.GITHUB_ENV.BREVO_API_KEY 
-        : '',
-  FROM_EMAIL: ((window.GITHUB_ENV && window.GITHUB_ENV.FROM_EMAIL) && window.GITHUB_ENV.FROM_EMAIL !== 'INJECT_FROM_EMAIL') 
-    ? window.GITHUB_ENV.FROM_EMAIL 
-        : 'noreply@ship.brevo.com',
-  TO_EMAIL: ((window.GITHUB_ENV && window.GITHUB_ENV.TO_EMAIL) && window.GITHUB_ENV.TO_EMAIL !== 'INJECT_TO_EMAIL') 
-    ? window.GITHUB_ENV.TO_EMAIL 
-        : 'optimussdf619@gmail.com',
-  RECAPTCHA_SITE_KEY: ((window.GITHUB_ENV && window.GITHUB_ENV.RECAPTCHA_SITE_KEY) && window.GITHUB_ENV.RECAPTCHA_SITE_KEY !== 'INJECT_RECAPTCHA_SITE_KEY') 
-    ? window.GITHUB_ENV.RECAPTCHA_SITE_KEY 
-        : '',
-        
+    BREVO_API_KEY: BREVO_API_KEY,
+    FROM_EMAIL: FROM_EMAIL,
+    TO_EMAIL: TO_EMAIL,
+    RECAPTCHA_SITE_KEY: RECAPTCHA_SITE_KEY,
     // Fallback configuration
     USE_MAILTO_FALLBACK: true
 };
