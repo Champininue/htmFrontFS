@@ -3,9 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🔧 Injecting environment variables into HTML files...');
+console.log('🔧 Injecting GitHub environment variables into HTML files...');
 
-// Get environment variables
+// Get environment variables from GitHub Actions
 const envVars = {
     BREVO_API_KEY: process.env.BREVO_API_KEY || '',
     FROM_EMAIL: process.env.FROM_EMAIL || 'noreply@ship.brevo.com',
