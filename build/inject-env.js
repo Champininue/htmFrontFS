@@ -48,7 +48,7 @@ if (fs.existsSync(htmlFile)) {
     
     // Replace environment variable placeholders
     Object.entries(envVars).forEach(([key, value]) => {
-        const placeholder = `{{${key}}}`;
+        const placeholder = `INJECT_${key}`;
         const regex = new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
         const oldContent = content;
         content = content.replace(regex, value);
