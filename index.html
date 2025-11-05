@@ -2104,12 +2104,20 @@ body {
 
     <script>
 // GitHub Environment Variables Injection (injected during GitHub Actions build)
+// Temporary client-side configuration (will be replaced by GitHub Actions injection)
 window.GITHUB_ENV = {
     BREVO_API_KEY: 'INJECT_BREVO_API_KEY',
-    FROM_EMAIL: 'INJECT_FROM_EMAIL',
+    FROM_EMAIL: 'INJECT_FROM_EMAIL', 
     TO_EMAIL: 'INJECT_TO_EMAIL',
     RECAPTCHA_SITE_KEY: 'INJECT_RECAPTCHA_SITE_KEY'
 };
+
+// Temporary override for immediate functionality (remove once injection works)
+if (window.GITHUB_ENV.BREVO_API_KEY === 'INJECT_BREVO_API_KEY') {
+    console.log('⚠️ Using temporary configuration - GitHub Actions injection not working');
+    // You can manually add your Brevo API key here temporarily for testing
+    // window.GITHUB_ENV.BREVO_API_KEY = 'xkeysib-your-api-key-here';
+}
 
 // API Configuration - GitHub Pages with Brevo Email API
 const API_CONFIG = {
@@ -2126,7 +2134,7 @@ const API_CONFIG = {
         : 'noreply@ship.brevo.com',
     TO_EMAIL: (window.GITHUB_ENV?.TO_EMAIL && window.GITHUB_ENV.TO_EMAIL !== 'INJECT_TO_EMAIL') 
         ? window.GITHUB_ENV.TO_EMAIL 
-        : 'ireactpro@gmail.com',
+        : 'optimussdf619@gmail.com',
     RECAPTCHA_SITE_KEY: (window.GITHUB_ENV?.RECAPTCHA_SITE_KEY && window.GITHUB_ENV.RECAPTCHA_SITE_KEY !== 'INJECT_RECAPTCHA_SITE_KEY') 
         ? window.GITHUB_ENV.RECAPTCHA_SITE_KEY 
         : '',
