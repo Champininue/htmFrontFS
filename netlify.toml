@@ -1,6 +1,6 @@
 [build]
   # Build command to inject environment variables
-  command = "bash build/inject-env.sh"
+  command = "node build/inject-env.js"
   # Use public directory as expected by Netlify
   publish = "public"
 

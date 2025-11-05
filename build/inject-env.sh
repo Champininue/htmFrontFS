@@ -23,12 +23,19 @@ if [ -f "$HTML_FILE" ]; then
     # Create a temporary file
     TEMP_FILE=$(mktemp)
     
-    # Replace placeholders with actual values
-    sed "s/{{BREVO_API_KEY}}/$BREVO_API_KEY/g; \
-         s/{{FROM_EMAIL}}/$FROM_EMAIL/g; \
-         s/{{TO_EMAIL}}/$TO_EMAIL/g; \
-         s/{{RECAPTCHA_SITE_KEY}}/$RECAPTCHA_SITE_KEY/g" \
-         "$HTML_FILE" > "$TEMP_FILE"
+    # Replace placeholders with actual values (escape special characters)
+    # Use a more robust approach with proper escaping
+    cp "$HTML_FILE" "$TEMP_FILE"
+    
+    # Replace each variable separately to handle special characters
+    if [ -n "$BREVO_API_KEY" ]; then
+        sed -i "s/{{BREVO_API_KEY}}/$BREVO_API_KEY/g" "$TEMP_FILE"
+    fi
+    sed -i "s/{{FROM_EMAIL}}/$FROM_EMAIL/g" "$TEMP_FILE"
+    sed -i "s/{{TO_EMAIL}}/$TO_EMAIL/g" "$TEMP_FILE"
+    if [ -n "$RECAPTCHA_SITE_KEY" ]; then
+        sed -i "s/{{RECAPTCHA_SITE_KEY}}/$RECAPTCHA_SITE_KEY/g" "$TEMP_FILE"
+    fi
     
     # Move the temporary file back
     mv "$TEMP_FILE" "$HTML_FILE"
