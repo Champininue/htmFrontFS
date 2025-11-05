@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+        .loading {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .form-test {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔌 API Connection Test</h1>
+        <p>Test your Vercel API connection before deploying to Netlify</p>
+        
+        <!-- API Configuration -->
+        <div class="form-test">
+            <h3>API Configuration</h3>
+            <label for="apiUrl">API Endpoint:</label>
+            <input type="url" id="apiUrl" value="https://apinet-cpxlhij2x-rs-projects-27d1b92f.vercel.app/api/contact" placeholder="Enter your API endpoint">
+            
+            <button onclick="testConnection()">🔍 Test Connection</button>
+            <button onclick="testHealthCheck()">❤️ Health Check</button>
+        </div>
+
+        <!-- Test Results -->
+        <div id="testResults"></div>
+
+        <!-- Form Test -->
+        <div class="form-test">
+            <h3>Contact Form Test</h3>
+            <form id="testForm">
+                <label for="testName">Name:</label>
+                <input type="text" id="testName" value="Test User" required>
+                
+                <label for="testEmail">Email:</label>
+                <input type="email" id="testEmail" value="test@example.com" required>
+                
+                <label for="testSubject">Subject:</label>
+                <select id="testSubject">
+                    <option value="test">Test Message</option>
+                    <option value="project">Project</option>
+                    <option value="question">Question</option>
+                </select>
+                
+                <label for="testMessage">Message:</label>
+                <textarea id="testMessage" rows="4" required>This is a test message from the API connection tester.</textarea>
+                
+                <button type="submit">📧 Send Test Message</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_CONFIG = {
+            CONTACT_ENDPOINT: 'https://apinet-cpxlhij2x-rs-projects-27d1b92f.vercel.app/api/contact',
+            RECAPTCHA_SITE_KEY: 'YOUR_RECAPTCHA_SITE_KEY_HERE'
+        };
+
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('testResults');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            
+            // Auto scroll to latest result
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+        }
+
+        async function testConnection() {
+            clearResults();
+            const apiUrl = document.getElementById('apiUrl').value || API_CONFIG.CONTACT_ENDPOINT;
+            
+            addResult('🔍 Testing API connection...', 'loading');
+            
+            try {
+                // Test if API endpoint is reachable
+                const response = await fetch(apiUrl, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                addResult(`✅ API endpoint is reachable!<br>
+                          <strong>URL:</strong> ${apiUrl}<br>
+                          <strong>Status:</strong> ${response.status}<br>
+                          <strong>CORS:</strong> ${response.headers.get('access-control-allow-origin') ? 'Enabled ✅' : 'Check needed ⚠️'}`, 'success');
+                
+            } catch (error) {
+                addResult(`❌ Connection failed!<br>
+                          <strong>Error:</strong> ${error.message}<br>
+                          <strong>Possible causes:</strong><br>
+                          • API endpoint is down<br>
+                          • CORS not configured<br>
+                          • Network connectivity issues`, 'error');
+            }
+        }
+
+        async function testHealthCheck() {
+            const baseUrl = document.getElementById('apiUrl').value.replace('/api/contact', '');
+            const healthUrl = baseUrl + '/api/health';
+            
+            addResult('❤️ Testing health endpoint...', 'loading');
+            
+            try {
+                const response = await fetch(healthUrl);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Health check passed!<br>
+                              <strong>Status:</strong> ${data.status || 'OK'}<br>
+                              <strong>Response:</strong> <pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                } else {
+                    addResult(`⚠️ Health endpoint returned ${response.status}<br>
+                              <strong>Response:</strong> <pre>${JSON.stringify(data, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Health check failed: ${error.message}`, 'error');
+            }
+        }
+
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const apiUrl = document.getElementById('apiUrl').value || API_CONFIG.CONTACT_ENDPOINT;
+            const formData = {
+                name: document.getElementById('testName').value,
+                email: document.getElementById('testEmail').value,
+                subject: document.getElementById('testSubject').value,
+                message: document.getElementById('testMessage').value,
+                updates: false,
+                recaptcha: 'test_token', // Mock reCAPTCHA token for testing
+                timestamp: new Date().toISOString(),
+                source: 'api_connection_test'
+            };
+            
+            addResult('📧 Sending test message...', 'loading');
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const responseText = await response.text();
+                let responseData;
+                
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch {
+                    responseData = responseText;
+                }
+                
+                if (response.ok) {
+                    addResult(`✅ Test message sent successfully!<br>
+                              <strong>Status:</strong> ${response.status}<br>
+                              <strong>Response:</strong> <pre>${JSON.stringify(responseData, null, 2)}</pre>`, 'success');
+                } else {
+                    addResult(`⚠️ API returned error ${response.status}<br>
+                              <strong>Response:</strong> <pre>${typeof responseData === 'string' ? responseData : JSON.stringify(responseData, null, 2)}</pre><br>
+                              <strong>Common issues:</strong><br>
+                              • reCAPTCHA validation failing<br>
+                              • Missing required fields<br>
+                              • Rate limiting active<br>
+                              • Email service configuration`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Network error: ${error.message}<br>
+                          <strong>Possible causes:</strong><br>
+                          • CORS policy blocking request<br>
+                          • API server is down<br>
+                          • Network connectivity issues<br>
+                          • Firewall blocking request`, 'error');
+            }
+        });
+
+        // Auto-test connection on page load
+        window.addEventListener('load', () => {
+            setTimeout(testConnection, 1000);
+        });
+
+        // Update API URL when changed
+        document.getElementById('apiUrl').addEventListener('change', (e) => {
+            API_CONFIG.CONTACT_ENDPOINT = e.target.value;
+        });
+    </script>
+</body>
+</html>
