@@ -2427,21 +2427,20 @@ ${message}
 `);setTimeout(()=>{const mailtoLink=`mailto:${API_CONFIG.TO_EMAIL}?subject=${emailSubject}&body=${emailBody}`;window.open(mailtoLink,'_blank');showFormMessage('נפתח חלון אימייל! 📧 אנא שלח את ההודעה.','success');form.reset();if(document.getElementById('charCount'))document.getElementById('charCount').textContent='0'},1000)}else{showFormMessage('שגיאה בשליחת ההודעה. אנא נסה שוב או שלח אימייל ישירות.','error')}}finally{btnText.style.display='inline';btnLoader.style.display='none';submitBtn.disabled=!1}})}}function showFormMessage(message,type){const messageEl=document.getElementById('formMessage');if(!messageEl)return;messageEl.textContent=message;messageEl.className='form-message '+type;messageEl.style.display='block';setTimeout(()=>messageEl.style.display='none',5000)}function initScrollEffects(){const backToTop=document.getElementById('backToTop');window.addEventListener('scroll',debounce(()=>{if(window.pageYOffset>300){backToTop.classList.add('visible')}else{backToTop.classList.remove('visible')}},100));if(backToTop){backToTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}))}}function debounce(func,wait){let timeout;return function executedFunction(...args){const later=()=>{clearTimeout(timeout);func(...args)};clearTimeout(timeout);timeout=setTimeout(later,wait)}}window.addEventListener('load',()=>{setTimeout(()=>{const elements=document.querySelectorAll('.section'),observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.style.opacity='1';entry.target.style.transform='translateY(0)'}})},{threshold:.1});elements.forEach(el=>{el.style.opacity='0';el.style.transform='translateY(30px)';el.style.transition='opacity 0.6s ease-out, transform 0.6s ease-out';observer.observe(el)})},500)});
 window.addEventListener('load',()=>{setTimeout(()=>{const elements=document.querySelectorAll('.section'),observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.style.opacity='1';entry.target.style.transform='translateY(0)'}})},{threshold:.1});elements.forEach(el=>{el.style.opacity='0';el.style.transform='translateY(30px)';el.style.transition='opacity 0.6s ease-out, transform 0.6s ease-out';observer.observe(el)})},500)});
     </script>
-    <!-- Lightweight anti-bot timestamps: mark readiness and first focus -->
+    <!-- Lightweight anti-bot timestamps: mark readiness and first user interaction -->
     <script>
     try {
       (function(){
         var markReady = function(){ try { if (!window.__formReadyAt) window.__formReadyAt = Date.now(); } catch(_e) {} };
-        var attachFocus = function(){
+        var attachInteraction = function(){
           var f = document.getElementById('contactForm');
-          if (f) {
-            var setFirstFocus = function(){ try { if (!window.__formFirstFocusAt) window.__formFirstFocusAt = Date.now(); } catch(_e2) {} };
-            f.addEventListener('focusin', setFirstFocus, { once: true });
-          }
+          if (!f) return;
+          var setFirst = function(){ try { if (!window.__formFirstFocusAt) window.__formFirstFocusAt = Date.now(); } catch(_e2) {} };
+          ['focusin','keydown','input'].forEach(function(ev){ f.addEventListener(ev, setFirst, { once: true }); });
         };
         if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', function(){ markReady(); attachFocus(); });
-        } else { markReady(); attachFocus(); }
+          document.addEventListener('DOMContentLoaded', function(){ markReady(); attachInteraction(); });
+        } else { markReady(); attachInteraction(); }
       })();
     } catch(_eTs) { /* ignore */ }
     </script>
@@ -2459,16 +2458,17 @@ window.addEventListener('load',()=>{setTimeout(()=>{const elements=document.quer
             // Anti-bot guard: enforce minimal dwell time before submit
             try {
               var __now = Date.now();
-              var __baseline = (window.__formFirstFocusAt || window.__formReadyAt || __now);
+              // Use first user interaction as baseline; if none captured yet, allow (avoid false block)
+              var __baseline = (window.__formFirstFocusAt || null);
               // Optional debug: log dwell metrics when ?debug=1
               try {
                 var __q = new URLSearchParams(window.location.search || '');
                 var __dbg = (__q.has('debug') && __q.get('debug') !== '0');
                 if (__dbg && console && console.log) {
-                  console.log('Dwell check', { now: __now, readyAt: window.__formReadyAt, firstFocusAt: window.__formFirstFocusAt, delta: (__now - __baseline) });
+                  console.log('Dwell check', { now: __now, readyAt: window.__formReadyAt, firstFocusAt: window.__formFirstFocusAt, baseline: __baseline, delta: (__baseline ? (__now - __baseline) : 'n/a (no interaction)') });
                 }
               } catch(_eDbg) {}
-              if ((__now - __baseline) < 1200) {
+              if (__baseline && (__now - __baseline) < 800) { // 0.8s min after first real interaction
                 showFormMessage('השליחה מהירה מדי. אנא המתן רגע ושלח מחדש.', 'error');
                 return;
               }

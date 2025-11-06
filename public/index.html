@@ -3729,17 +3729,19 @@ const API_CONFIG = {
     USE_MAILTO_FALLBACK: true
 };
 
-// Lightweight anti-bot: record when the form became interactive/first focused
+// Lightweight anti-bot: record first user interaction (focus/keydown/input)
 try {
   (function(){
-    document.addEventListener('DOMContentLoaded', function(){
-      try { window.__formReadyAt = Date.now(); } catch(_e) {}
+    var markReady = function(){ try { if (!window.__formReadyAt) window.__formReadyAt = Date.now(); } catch(_e) {} };
+    var attach = function(){
       var f = document.getElementById('contactForm');
-      if (f) {
-        var setFirstFocus = function(){ try { if (!window.__formFirstFocusAt) window.__formFirstFocusAt = Date.now(); } catch(_e2) {} };
-        f.addEventListener('focusin', setFirstFocus, { once: true });
-      }
-    });
+      if (!f) return;
+      var setFirst = function(){ try { if (!window.__formFirstFocusAt) window.__formFirstFocusAt = Date.now(); } catch(_e2) {} };
+      ['focusin','keydown','input'].forEach(function(ev){ f.addEventListener(ev, setFirst, { once: true }); });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function(){ markReady(); attach(); });
+    } else { markReady(); attach(); }
   })();
 } catch(_e) { /* ignore */ }
 
@@ -4053,16 +4055,16 @@ ${message}
             // Anti-bot guard: require minimal dwell time before submit
             try {
               var __now = Date.now();
-              var __baseline = (window.__formFirstFocusAt || window.__formReadyAt || __now);
+              var __baseline = (window.__formFirstFocusAt || null);
               // Optional debug: log dwell metrics when ?debug=1
               try {
                 var __q = new URLSearchParams(window.location.search || '');
                 var __dbg = (__q.has('debug') && __q.get('debug') !== '0');
                 if (__dbg && console && console.log) {
-                  console.log('Dwell check', { now: __now, readyAt: window.__formReadyAt, firstFocusAt: window.__formFirstFocusAt, delta: (__now - __baseline) });
+                  console.log('Dwell check', { now: __now, readyAt: window.__formReadyAt, firstFocusAt: window.__formFirstFocusAt, baseline: __baseline, delta: (__baseline ? (__now - __baseline) : 'n/a (no interaction)') });
                 }
               } catch(_eDbg) {}
-              if ((__now - __baseline) < 1200) { // ~1.2s min dwell
+              if (__baseline && (__now - __baseline) < 800) { // ~0.8s after first interaction
                 showFormMessage('השליחה מהירה מדי. אנא המתן רגע ושלח מחדש.', 'error');
                 return;
               }
