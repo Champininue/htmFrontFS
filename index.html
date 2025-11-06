@@ -2436,6 +2436,15 @@ ${message}
             e.stopImmediatePropagation();
             e.stopPropagation();
             e.preventDefault();
+            // Anti-bot guard: enforce minimal dwell time before submit
+            try {
+              var __now = Date.now();
+              var __baseline = (window.__formFirstFocusAt || window.__formReadyAt || __now);
+              if ((__now - __baseline) < 1200) {
+                showFormMessage('השליחה מהירה מדי. אנא המתן רגע ושלח מחדש.', 'error');
+                return;
+              }
+            } catch(_eGuard) {}
             var name=document.getElementById('name').value.trim();
             var email=document.getElementById('email').value.trim();
             var subject=document.getElementById('subject').value;

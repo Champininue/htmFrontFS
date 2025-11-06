@@ -3728,6 +3728,20 @@ const API_CONFIG = {
     USE_MAILTO_FALLBACK: true
 };
 
+// Lightweight anti-bot: record when the form became interactive/first focused
+try {
+  (function(){
+    document.addEventListener('DOMContentLoaded', function(){
+      try { window.__formReadyAt = Date.now(); } catch(_e) {}
+      var f = document.getElementById('contactForm');
+      if (f) {
+        var setFirstFocus = function(){ try { if (!window.__formFirstFocusAt) window.__formFirstFocusAt = Date.now(); } catch(_e2) {} };
+        f.addEventListener('focusin', setFirstFocus, { once: true });
+      }
+    });
+  })();
+} catch(_e) { /* ignore */ }
+
 // Debug logging utilities (disabled unless ?debug is present)
 var __qs = new URLSearchParams(window.location.search || '');
 var __DEBUG_ENABLED = (__qs.has('debug') && __qs.get('debug') !== '0');
@@ -4035,6 +4049,15 @@ ${message}
             e.stopImmediatePropagation();
             e.stopPropagation();
             e.preventDefault();
+            // Anti-bot guard: require minimal dwell time before submit
+            try {
+              var __now = Date.now();
+              var __baseline = (window.__formFirstFocusAt || window.__formReadyAt || __now);
+              if ((__now - __baseline) < 1200) { // ~1.2s min dwell
+                showFormMessage('השליחה מהירה מדי. אנא המתן רגע ושלח מחדש.', 'error');
+                return;
+              }
+            } catch(_eGuard) {}
             var name=document.getElementById('name').value.trim();
             var email=document.getElementById('email').value.trim();
             var subject=document.getElementById('subject').value;
