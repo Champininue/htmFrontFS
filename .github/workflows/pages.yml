@@ -24,6 +24,7 @@ jobs:
       RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}
       PROXY_URL: ${{ secrets.PROXY_URL }}
       MINIFY_HTML: ${{ secrets.MINIFY_HTML }}
+      AGGRESSIVE_MINIFY: ${{ secrets.AGGRESSIVE_MINIFY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -96,16 +97,36 @@ jobs:
         with:
           node-version: '20'
         if: ${{ env.MINIFY_HTML == 'true' }}
-      - name: Minify HTML in dist (conservative)
+      - name: Minify HTML in dist (aggressive)
         shell: bash
-        if: ${{ env.MINIFY_HTML == 'true' }}
+        if: ${{ env.MINIFY_HTML == 'true' && env.AGGRESSIVE_MINIFY == 'true' }}
         run: |
           set -euo pipefail
           shopt -s nullglob
           files=(dist/index.html dist/public/index.html)
           for f in "${files[@]}"; do
             if [[ -f "$f" ]]; then
-              echo "Minifying $f (collapse whitespace, remove comments only)"
+              echo "Minifying $f (aggressive: collapse whitespace, remove comments, minify CSS & JS)"
+              npx --yes html-minifier-terser \
+                --collapse-whitespace \
+                --remove-comments \
+                --minify-css true \
+                --minify-js true \
+                --output "$f" \
+                "$f"
+            fi
+          done
+
+      - name: Minify HTML in dist (conservative)
+        shell: bash
+        if: ${{ env.MINIFY_HTML == 'true' && env.AGGRESSIVE_MINIFY != 'true' }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(dist/index.html dist/public/index.html)
+          for f in "${files[@]}"; do
+            if [[ -f "$f" ]]; then
+              echo "Minifying $f (conservative: collapse whitespace, remove comments only)"
               npx --yes html-minifier-terser \
                 --collapse-whitespace \
                 --remove-comments \
