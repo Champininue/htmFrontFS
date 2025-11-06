@@ -34,7 +34,8 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
-          files=(index.html public/index.html index.min.html)
+          # We only inject into source files. The minified file is generated later.
+          files=(index.html public/index.html)
           for f in "${files[@]}"; do
             if [[ -f "$f" ]]; then
               echo "Injecting env into $f"
@@ -48,11 +49,33 @@ jobs:
             fi
           done
 
+      - name: Generate minified HTML (index.min.html)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Minify index.html -> index.min.html
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f index.html ]]; then
+            npx --yes html-minifier-terser \
+              --collapse-whitespace \
+              --remove-comments \
+              --minify-css true \
+              --minify-js true \
+              --output index.min.html \
+              index.html
+            echo "Minified index.html to index.min.html"
+          else
+            echo "index.html not found; skipping minification" >&2
+          fi
+
       - name: Verify env injection & summary
         shell: bash
         run: |
           set -euo pipefail
-          files=(index.html public/index.html index.min.html)
+          # Verify only source files for placeholders; minified file is derived.
+          files=(index.html public/index.html)
           placeholder_found=0
           for f in "${files[@]}"; do
             [[ -f "$f" ]] || continue
