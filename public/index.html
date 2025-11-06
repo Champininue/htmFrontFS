@@ -1,3 +1,61 @@
+// Proxy-first override: hijack submit to use PROXY_URL if configured (capture to beat existing handler)
+try {
+  document.addEventListener('DOMContentLoaded', function(){
+    if (!(API_CONFIG && API_CONFIG.USE_PROXY && API_CONFIG.PROXY_URL)) return;
+    var form = document.getElementById('contactForm');
+    if (!form) return;
+    form.addEventListener('submit', async function(e){
+      try {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        var name=document.getElementById('name').value.trim();
+        var email=document.getElementById('email').value.trim();
+        var subject=document.getElementById('subject').value;
+        var message=document.getElementById('message').value.trim();
+        var updates=document.getElementById('updates').checked;
+        if(!name||!email||!message||message.length<10){ showFormMessage('נא למלא את כל השדות','error'); return; }
+        var submitBtn=form.querySelector('.btn-submit');
+        var btnText=submitBtn?submitBtn.querySelector('.btn-text'):null;
+        var btnLoader=submitBtn?submitBtn.querySelector('.btn-loader'):null;
+        if(btnText) btnText.style.display='none';
+        if(btnLoader) btnLoader.style.display='flex';
+        if(submitBtn) submitBtn.disabled=true;
+        var payload = { name, email, subject, message, updates, source:'portfolio_site', timestamp:new Date().toISOString() };
+        var resp = await fetch(API_CONFIG.PROXY_URL, { method:'POST', mode:'cors', cache:'no-store', headers:{ 'Content-Type':'application/json', 'Accept':'application/json' }, body: JSON.stringify(payload) });
+        if (resp.ok) {
+          await resp.json().catch(function(){});
+          showFormMessage('ההודעה נשלחה בהצלחה! ✅ תודה על פנייתך.','success');
+          form.reset();
+          var cc=document.getElementById('charCount'); if(cc) cc.textContent='0';
+        } else {
+          var t = await resp.text();
+          throw new Error('Proxy error: '+resp.status+' - '+t);
+        }
+      } catch (err) {
+        console.error('Proxy submit failed:', err);
+        // Fall back to existing handler (mailto) by programmatically opening mailto
+        var name=document.getElementById('name').value.trim();
+        var email=document.getElementById('email').value.trim();
+        var subject=document.getElementById('subject').value;
+        var message=document.getElementById('message').value.trim();
+        var updates=document.getElementById('updates').checked;
+        var emailSubject=encodeURIComponent('פנייה מהאתר - '+subject);
+        var emailBody=encodeURIComponent('שלום,\n\nשם: '+name+'\nאימייל: '+email+'\nנושא: '+subject+'\n\nהודעה:\n'+message+'\n\nעדכונים: '+(updates?'כן':'לא')+'\n\n---\nנשלח מהאתר בתאריך: '+new Date().toLocaleString('he-IL')+'\n');
+        var mailtoLink='mailto:'+API_CONFIG.TO_EMAIL+'?subject='+emailSubject+'&body='+emailBody;
+        window.open(mailtoLink,'_blank');
+        showFormMessage('🔄 נפתח חלון אימייל חדש! אנא שלח את ההודעה מהאימייל שלך.','info');
+        form.reset(); var cc=document.getElementById('charCount'); if(cc) cc.textContent='0';
+      } finally {
+        var submitBtn=form.querySelector('.btn-submit');
+        var btnText=submitBtn?submitBtn.querySelector('.btn-text'):null;
+        var btnLoader=submitBtn?submitBtn.querySelector('.btn-loader'):null;
+        if(btnText) btnText.style.display='inline';
+        if(btnLoader) btnLoader.style.display='none';
+        if(submitBtn) submitBtn.disabled=false;
+      }
+    }, true);
+  });
+} catch(_e) {}
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -2098,7 +2156,8 @@ window.GITHUB_ENV = {
   BREVO_API_KEY: 'INJECT_BREVO_API_KEY',
   FROM_EMAIL: 'INJECT_FROM_EMAIL',
   TO_EMAIL: 'INJECT_TO_EMAIL',
-  RECAPTCHA_SITE_KEY: 'INJECT_RECAPTCHA_SITE_KEY'
+  RECAPTCHA_SITE_KEY: 'INJECT_RECAPTCHA_SITE_KEY',
+  PROXY_URL: 'INJECT_PROXY_URL'
 };
 
 // Compute environment values safely (avoid parser issues on some browsers)
@@ -2109,11 +2168,15 @@ var BREVO_API_KEY = injected.BREVO_API_KEY ? __cleanVal(injected.BREVO_API_KEY) 
 var FROM_EMAIL = injected.FROM_EMAIL ? __cleanVal(injected.FROM_EMAIL) : 'optimussdf619@gmail.com';
 var TO_EMAIL = injected.TO_EMAIL ? __cleanVal(injected.TO_EMAIL) : 'optimussdf619@gmail.com';
 var RECAPTCHA_SITE_KEY = injected.RECAPTCHA_SITE_KEY ? __cleanVal(injected.RECAPTCHA_SITE_KEY) : '';
+var PROXY_URL = injected.PROXY_URL ? __cleanVal(injected.PROXY_URL) : '';
 
-// API Configuration - GitHub Pages with Brevo Email API
+// API Configuration - Proxy-first (no client secrets)
 const API_CONFIG = {
-    // Primary: Brevo Email API (professional email delivery)
-    USE_BREVO: true,
+  // Primary: Proxy endpoint to send email without exposing secrets
+  PROXY_URL: PROXY_URL,
+  USE_PROXY: !!PROXY_URL,
+  // Optional: direct Brevo Email API (disabled on client for security)
+  USE_BREVO: false,
     BREVO_API_URL: 'https://api.brevo.com/v3/smtp/email',
     // Environment variables injected by GitHub Actions
     BREVO_API_KEY: BREVO_API_KEY,
@@ -2127,8 +2190,10 @@ const API_CONFIG = {
 // Debug: Show current configuration
 console.log('Contact Form Configuration (GitHub Pages):');
 console.log('Raw GITHUB_ENV:', window.GITHUB_ENV);
+console.log('Proxy URL configured:', !!API_CONFIG.PROXY_URL, API_CONFIG.PROXY_URL || '');
+console.log('Using Proxy:', API_CONFIG.USE_PROXY);
 console.log('Environment variables available:', !!(window.GITHUB_ENV && window.GITHUB_ENV.BREVO_API_KEY));
-console.log('Using Brevo API:', API_CONFIG.USE_BREVO);
+console.log('Using Brevo API (direct):', API_CONFIG.USE_BREVO);
 console.log('API Key configured:', !!API_CONFIG.BREVO_API_KEY);
 console.log('API Key length:', (API_CONFIG.BREVO_API_KEY ? API_CONFIG.BREVO_API_KEY.length : 0));
 console.log('TO_EMAIL:', API_CONFIG.TO_EMAIL);
@@ -2155,7 +2220,9 @@ try {
     wrap.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)';
     var keyLen = (API_CONFIG && API_CONFIG.BREVO_API_KEY) ? String(API_CONFIG.BREVO_API_KEY).length : 0;
     wrap.innerHTML = '<div style="font-weight:700;margin-bottom:6px">Debug</div>'+
-      '<div>Brevo enabled: <b>' + (!!(API_CONFIG && API_CONFIG.USE_BREVO)) + '</b></div>'+
+      '<div>Proxy enabled: <b>' + (!!(API_CONFIG && API_CONFIG.USE_PROXY)) + '</b></div>'+
+      '<div>Proxy URL: <b style="word-break:break-all">' + (API_CONFIG && API_CONFIG.PROXY_URL ? API_CONFIG.PROXY_URL : '') + '</b></div>'+
+      '<div>Brevo enabled (direct): <b>' + (!!(API_CONFIG && API_CONFIG.USE_BREVO)) + '</b></div>'+
       '<div>Key configured: <b>' + (!!(API_CONFIG && API_CONFIG.BREVO_API_KEY)) + '</b></div>'+
       '<div>Key length: <b>' + keyLen + '</b></div>'+
       '<div>FROM: <b>' + (API_CONFIG && API_CONFIG.FROM_EMAIL ? API_CONFIG.FROM_EMAIL : '') + '</b></div>'+

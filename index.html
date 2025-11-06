@@ -2110,7 +2110,8 @@ window.GITHUB_ENV = {
     BREVO_API_KEY: 'INJECT_BREVO_API_KEY',
     FROM_EMAIL: 'INJECT_FROM_EMAIL', 
     TO_EMAIL: 'INJECT_TO_EMAIL',
-    RECAPTCHA_SITE_KEY: 'INJECT_RECAPTCHA_SITE_KEY'
+  RECAPTCHA_SITE_KEY: 'INJECT_RECAPTCHA_SITE_KEY',
+  PROXY_URL: 'INJECT_PROXY_URL'
 };
 
 // Note: Values are injected by CI into public/index.html. This local file provides placeholders only.
@@ -2123,11 +2124,15 @@ var BREVO_API_KEY = injected.BREVO_API_KEY ? __cleanVal(injected.BREVO_API_KEY) 
 var FROM_EMAIL = injected.FROM_EMAIL ? __cleanVal(injected.FROM_EMAIL) : 'optimussdf619@gmail.com';
 var TO_EMAIL = injected.TO_EMAIL ? __cleanVal(injected.TO_EMAIL) : 'optimussdf619@gmail.com';
 var RECAPTCHA_SITE_KEY = injected.RECAPTCHA_SITE_KEY ? __cleanVal(injected.RECAPTCHA_SITE_KEY) : '';
+var PROXY_URL = injected.PROXY_URL ? __cleanVal(injected.PROXY_URL) : '';
 
-// API Configuration - GitHub Pages with Brevo Email API
+// API Configuration - Proxy-first (no client secrets)
 const API_CONFIG = {
-    // Primary: Brevo Email API (professional email delivery)
-    USE_BREVO: true,
+  // Primary: Proxy endpoint to send email without exposing secrets
+  PROXY_URL: PROXY_URL,
+  USE_PROXY: !!PROXY_URL,
+  // Optional: direct Brevo Email API (disabled on client for security)
+  USE_BREVO: false,
     BREVO_API_URL: 'https://api.brevo.com/v3/smtp/email',
     // Environment variables injected by GitHub Actions
     BREVO_API_KEY: BREVO_API_KEY,
@@ -2141,8 +2146,10 @@ const API_CONFIG = {
 // Debug: Show current configuration
 console.log('Contact Form Configuration (GitHub Pages):');
 console.log('Raw GITHUB_ENV:', window.GITHUB_ENV);
+console.log('Proxy URL configured:', !!API_CONFIG.PROXY_URL, API_CONFIG.PROXY_URL || '');
+console.log('Using Proxy:', API_CONFIG.USE_PROXY);
 console.log('Environment variables available:', !!(window.GITHUB_ENV && window.GITHUB_ENV.BREVO_API_KEY));
-console.log('Using Brevo API:', API_CONFIG.USE_BREVO);
+console.log('Using Brevo API (direct):', API_CONFIG.USE_BREVO);
 console.log('API Key configured:', !!API_CONFIG.BREVO_API_KEY);
 console.log('API Key length:', (API_CONFIG.BREVO_API_KEY ? API_CONFIG.BREVO_API_KEY.length : 0));
 console.log('TO_EMAIL:', API_CONFIG.TO_EMAIL);

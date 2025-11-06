@@ -83,6 +83,7 @@ jobs:
           FROM_EMAIL: ${{ secrets.FROM_EMAIL || vars.FROM_EMAIL }}
           TO_EMAIL: ${{ secrets.TO_EMAIL || vars.TO_EMAIL }}
           RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY || vars.RECAPTCHA_SITE_KEY }}
+          PROXY_URL: ${{ secrets.PROXY_URL || vars.PROXY_URL }}
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
