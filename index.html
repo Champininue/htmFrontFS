@@ -2118,7 +2118,7 @@ window.GITHUB_ENV = {
 // Compute environment values safely (avoid parser issues on some browsers)
 var injected = window.GITHUB_ENV || {};
 var BREVO_API_KEY = (injected.BREVO_API_KEY && injected.BREVO_API_KEY !== 'INJECT_BREVO_API_KEY') ? injected.BREVO_API_KEY : '';
-var FROM_EMAIL = (injected.FROM_EMAIL && injected.FROM_EMAIL !== 'INJECT_FROM_EMAIL') ? injected.FROM_EMAIL : 'noreply@ship.brevo.com';
+var FROM_EMAIL = (injected.FROM_EMAIL && injected.FROM_EMAIL !== 'INJECT_FROM_EMAIL') ? injected.FROM_EMAIL : 'optimussdf619@gmail.com';
 var TO_EMAIL = (injected.TO_EMAIL && injected.TO_EMAIL !== 'INJECT_TO_EMAIL') ? injected.TO_EMAIL : 'optimussdf619@gmail.com';
 var RECAPTCHA_SITE_KEY = (injected.RECAPTCHA_SITE_KEY && injected.RECAPTCHA_SITE_KEY !== 'INJECT_RECAPTCHA_SITE_KEY') ? injected.RECAPTCHA_SITE_KEY : '';
 
@@ -2159,7 +2159,7 @@ const projectsData=[{id:1,title:'מערכת ניהול לקוחות חכמה',ic
 <h3 class="project-title">${project.title}</h3>
 <p class="project-tagline">${project.tagline}</p>
 <div class="project-tags">
-${project.tags.slice(0,4).map(tag=>`<span class="project-tag">${tag}</span>`).join('')}
+${project.tags.slice(0,4).map(function(tag){ return '<span class="project-tag">' + tag + '</span>'; }).join('')}
 </div>
 <span class="project-duration">⏱️ ${project.duration}</span>
 <a href="#" class="project-link">
@@ -2177,7 +2177,7 @@ ${project.tags.slice(0,4).map(tag=>`<span class="project-tag">${tag}</span>`).jo
 <div style="font-size:64px;margin-bottom:16px">${project.icon}</div>
 <h2 style="font-size:32px;font-weight:800;margin-bottom:16px">${project.title}</h2>
 <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-${project.tags.map(tag=>`<span style="padding:6px 14px;background:var(--color-border);border-radius:999px;font-size:12px">${tag}</span>`).join('')}
+${project.tags.map(function(tag){ return '<span style="padding:6px 14px;background:var(--color-border);border-radius:999px;font-size:12px">' + tag + '</span>'; }).join('')}
 </div>
 </div>
 <div style="margin-bottom:24px">
@@ -2191,13 +2191,13 @@ ${project.tags.map(tag=>`<span style="padding:6px 14px;background:var(--color-bo
 <div style="margin-bottom:24px">
 <h3 style="font-size:20px;font-weight:700;margin-bottom:12px">✅ תכונות</h3>
 <ul style="list-style:none;padding:0">
-${project.features.map(f=>`<li style="padding:12px;background:var(--color-surface);margin-bottom:8px;border-radius:8px;border-right:3px solid #10b981">✓ ${f}</li>`).join('')}
+${project.features.map(function(f){ return '<li style="padding:12px;background:var(--color-surface);margin-bottom:8px;border-radius:8px;border-right:3px solid #10b981">✓ ' + f + '</li>'; }).join('')}
 </ul>
 </div>
 <div style="margin-bottom:24px">
 <h3 style="font-size:20px;font-weight:700;margin-bottom:12px">📈 תוצאות</h3>
 <div style="display:grid;gap:16px">
-${project.results.map((r,i)=>`<div style="padding:16px;background:rgba(59,130,246,0.1);border-radius:8px;text-align:center"><div style="font-size:32px;margin-bottom:8px">${i===0?'🎯':i===1?'🚀':'⭐'}</div><div>${r}</div></div>`).join('')}
+${project.results.map(function(r,i){ return '<div style="padding:16px;background:rgba(59,130,246,0.1);border-radius:8px;text-align:center"><div style="font-size:32px;margin-bottom:8px">' + (i===0?'🎯':i===1?'🚀':'⭐') + '</div><div>' + r + '</div></div>'; }).join('')}
 </div>
 </div>
 <div style="display:flex;gap:16px;flex-wrap:wrap">
