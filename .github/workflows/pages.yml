@@ -23,6 +23,7 @@ jobs:
       TO_EMAIL: ${{ secrets.TO_EMAIL }}
       RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}
       PROXY_URL: ${{ secrets.PROXY_URL }}
+      MINIFY_HTML: ${{ secrets.MINIFY_HTML }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -90,12 +91,14 @@ jobs:
             fi
           done
 
-      - name: Setup Node.js
+      - name: Setup Node.js (only if minifying)
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+        if: ${{ env.MINIFY_HTML == 'true' }}
       - name: Minify HTML in dist (conservative)
         shell: bash
+        if: ${{ env.MINIFY_HTML == 'true' }}
         run: |
           set -euo pipefail
           shopt -s nullglob
