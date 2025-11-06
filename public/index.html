@@ -2104,10 +2104,11 @@ window.GITHUB_ENV = {
 // Compute environment values safely (avoid parser issues on some browsers)
 var injected = window.GITHUB_ENV || {};
 function __cleanVal(v){ try { return (typeof v === 'string') ? v.replace(/\r?\n/g,'').trim() : v; } catch(e){ return v; } }
-var BREVO_API_KEY = (injected.BREVO_API_KEY && injected.BREVO_API_KEY !== 'INJECT_BREVO_API_KEY') ? __cleanVal(injected.BREVO_API_KEY) : '';
-var FROM_EMAIL = (injected.FROM_EMAIL && injected.FROM_EMAIL !== 'INJECT_FROM_EMAIL') ? __cleanVal(injected.FROM_EMAIL) : 'optimussdf619@gmail.com';
-var TO_EMAIL = (injected.TO_EMAIL && injected.TO_EMAIL !== 'INJECT_TO_EMAIL') ? __cleanVal(injected.TO_EMAIL) : 'optimussdf619@gmail.com';
-var RECAPTCHA_SITE_KEY = (injected.RECAPTCHA_SITE_KEY && injected.RECAPTCHA_SITE_KEY !== 'INJECT_RECAPTCHA_SITE_KEY') ? __cleanVal(injected.RECAPTCHA_SITE_KEY) : '';
+// Trust CI to fail builds if placeholders remain; just clean and use values here
+var BREVO_API_KEY = injected.BREVO_API_KEY ? __cleanVal(injected.BREVO_API_KEY) : '';
+var FROM_EMAIL = injected.FROM_EMAIL ? __cleanVal(injected.FROM_EMAIL) : 'optimussdf619@gmail.com';
+var TO_EMAIL = injected.TO_EMAIL ? __cleanVal(injected.TO_EMAIL) : 'optimussdf619@gmail.com';
+var RECAPTCHA_SITE_KEY = injected.RECAPTCHA_SITE_KEY ? __cleanVal(injected.RECAPTCHA_SITE_KEY) : '';
 
 // API Configuration - GitHub Pages with Brevo Email API
 const API_CONFIG = {
@@ -2313,7 +2314,7 @@ ${message}
 brevoData.replyTo = { email, name };
 const payload = JSON.stringify(brevoData);
 console.log('Brevo payload size:', payload ? payload.length : 0);
-if(!API_CONFIG.BREVO_API_KEY||API_CONFIG.BREVO_API_KEY==='INJECT_BREVO_API_KEY'||API_CONFIG.BREVO_API_KEY.length<20||!API_CONFIG.FROM_EMAIL||API_CONFIG.FROM_EMAIL==='INJECT_FROM_EMAIL'||!API_CONFIG.TO_EMAIL||API_CONFIG.TO_EMAIL==='INJECT_TO_EMAIL'){
+if(!API_CONFIG.BREVO_API_KEY||API_CONFIG.BREVO_API_KEY.length<20||!API_CONFIG.FROM_EMAIL||!API_CONFIG.TO_EMAIL){
   console.warn('Brevo not configured properly. Falling back to mailto.');
   throw new Error('Brevo not configured')
 }

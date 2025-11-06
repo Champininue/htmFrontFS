@@ -2117,10 +2117,12 @@ window.GITHUB_ENV = {
 
 // Compute environment values safely (avoid parser issues on some browsers)
 var injected = window.GITHUB_ENV || {};
-var BREVO_API_KEY = (injected.BREVO_API_KEY && injected.BREVO_API_KEY !== 'INJECT_BREVO_API_KEY') ? injected.BREVO_API_KEY : '';
-var FROM_EMAIL = (injected.FROM_EMAIL && injected.FROM_EMAIL !== 'INJECT_FROM_EMAIL') ? injected.FROM_EMAIL : 'optimussdf619@gmail.com';
-var TO_EMAIL = (injected.TO_EMAIL && injected.TO_EMAIL !== 'INJECT_TO_EMAIL') ? injected.TO_EMAIL : 'optimussdf619@gmail.com';
-var RECAPTCHA_SITE_KEY = (injected.RECAPTCHA_SITE_KEY && injected.RECAPTCHA_SITE_KEY !== 'INJECT_RECAPTCHA_SITE_KEY') ? injected.RECAPTCHA_SITE_KEY : '';
+function __cleanVal(v){ try { return (typeof v === 'string') ? v.replace(/\r?\n/g,'').trim() : v; } catch(e){ return v; } }
+// Rely on CI to block leftover placeholders; just clean and use values here
+var BREVO_API_KEY = injected.BREVO_API_KEY ? __cleanVal(injected.BREVO_API_KEY) : '';
+var FROM_EMAIL = injected.FROM_EMAIL ? __cleanVal(injected.FROM_EMAIL) : 'optimussdf619@gmail.com';
+var TO_EMAIL = injected.TO_EMAIL ? __cleanVal(injected.TO_EMAIL) : 'optimussdf619@gmail.com';
+var RECAPTCHA_SITE_KEY = injected.RECAPTCHA_SITE_KEY ? __cleanVal(injected.RECAPTCHA_SITE_KEY) : '';
 
 // API Configuration - GitHub Pages with Brevo Email API
 const API_CONFIG = {
