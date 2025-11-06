@@ -29,13 +29,26 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Inject env placeholders into HTML
+      - name: Prepare dist folder
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist
+          rsync -a ./ dist/ \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'node_modules' \
+            --exclude 'dist' \
+            --exclude 'build'
+
+      - name: Inject env placeholders into HTML (in dist)
         shell: bash
         run: |
           set -euo pipefail
           shopt -s nullglob
-          # We only inject into source files. The minified file is generated later.
-          files=(index.html public/index.html)
+          # Inject into files inside dist
+          files=(dist/index.html dist/public/index.html)
           for f in "${files[@]}"; do
             if [[ -f "$f" ]]; then
               echo "Injecting env into $f"
@@ -53,31 +66,29 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Minify HTML in-place (serve minified files)
+      - name: Minify HTML in dist (conservative)
         shell: bash
         run: |
           set -euo pipefail
           shopt -s nullglob
-          files=(index.html public/index.html)
+          files=(dist/index.html dist/public/index.html)
           for f in "${files[@]}"; do
             if [[ -f "$f" ]]; then
-              echo "Minifying $f in-place"
+              echo "Minifying $f (collapse whitespace, remove comments only)"
               npx --yes html-minifier-terser \
                 --collapse-whitespace \
                 --remove-comments \
-                --minify-css true \
-                --minify-js true \
                 --output "$f" \
                 "$f"
             fi
           done
 
-      - name: Verify env injection & summary
+      - name: Verify env injection & summary (dist)
         shell: bash
         run: |
           set -euo pipefail
-          # Verify only source files for placeholders; minified file is derived.
-          files=(index.html public/index.html)
+          # Verify dist files for placeholders
+          files=(dist/index.html dist/public/index.html)
           placeholder_found=0
           for f in "${files[@]}"; do
             [[ -f "$f" ]] || continue
@@ -105,7 +116,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: dist
 
   deploy:
     runs-on: ubuntu-latest
