@@ -58,27 +58,34 @@ for (const htmlFile of files) {
     processedAny = true;
     console.log(`✅ Processing: ${htmlFile}`);
   
-    let content = fs.readFileSync(htmlFile, 'utf8');
+        let content = fs.readFileSync(htmlFile, 'utf8');
     
-    // Replace environment variable placeholders
-    Object.entries(envVars).forEach(([key, value]) => {
-        const placeholder = `INJECT_${key}`;
-        const regex = new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-        const oldContent = content;
-        content = content.replace(regex, value);
-        
-        if (content !== oldContent) {
-            console.log(`✅ Replaced ${placeholder} with ${key === 'BREVO_API_KEY' && value ? '[HIDDEN API KEY]' : value || '(empty)'}`);
-        } else if (value) {
-            console.log(`⚠️  ${placeholder} not found in file`);
-        }
-    });
+        // Replace environment variable placeholders (support both INJECT_* and {{VAR}} styles)
+        Object.entries(envVars).forEach(([key, value]) => {
+            const oldContent = content;
+            const valLog = key === 'BREVO_API_KEY' && value ? '[HIDDEN API KEY]' : (value || '(empty)');
+
+            // INJECT_KEY
+            const injectToken = `INJECT_${key}`;
+            const injectRegex = new RegExp(injectToken.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+            content = content.replace(injectRegex, value);
+
+            // {{ KEY }} with optional spaces
+            const mustacheRegex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`,'g');
+            content = content.replace(mustacheRegex, value);
+
+            if (content !== oldContent) {
+                console.log(`✅ Replaced placeholders for ${key} with ${valLog}`);
+            } else {
+                console.log(`ℹ️  No ${key} placeholders found in ${path.basename(htmlFile)}`);
+            }
+        });
     
     // Append a build marker comment to verify injection ran and aid cache busting
     content += `\n<!-- build: ${new Date().toISOString()} -->\n`;
 
     // Sanity check: ensure no placeholders remain
-    const placeholderRegex = /INJECT_(BREVO_API_KEY|FROM_EMAIL|TO_EMAIL|RECAPTCHA_SITE_KEY)/g;
+        const placeholderRegex = /(INJECT_(BREVO_API_KEY|FROM_EMAIL|TO_EMAIL|RECAPTCHA_SITE_KEY))|\{\{\s*(BREVO_API_KEY|FROM_EMAIL|TO_EMAIL|RECAPTCHA_SITE_KEY)\s*\}\}/g;
     const leftovers = content.match(placeholderRegex);
     if (leftovers) {
         console.error('❌ Placeholder tokens still present after injection:', Array.from(new Set(leftovers)));

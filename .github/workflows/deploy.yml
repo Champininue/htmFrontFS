@@ -62,9 +62,9 @@ jobs:
         node build/inject-env.js
         echo "✅ Injection step completed"
         echo "📄 Checking for any remaining placeholders (should be none):"
-        if grep -q "INJECT_" public/index.html; then
+        if grep -Eq "INJECT_|\{\{" public/index.html; then
           echo "❌ Placeholders still present in public/index.html"
-          grep -n "INJECT_" -n public/index.html | head -10
+          grep -nE "INJECT_|\{\{" public/index.html | head -20
           exit 1
         else
           echo "✅ No placeholders remain"
