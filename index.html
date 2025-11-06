@@ -2165,32 +2165,17 @@ const API_CONFIG = {
     USE_MAILTO_FALLBACK: true
 };
 
-// Debug: Show current configuration
-console.log('Contact Form Configuration (GitHub Pages):');
-// Redact secrets from logs
-try {
-  var __red = Object.assign({}, window.GITHUB_ENV || {});
-  if (__red && __red.BREVO_API_KEY) {
-    var k = String(__red.BREVO_API_KEY);
-    __red.BREVO_API_KEY = '(redacted:' + k.slice(0,4) + '…' + k.slice(-4) + ')';
-  }
-  console.log('Raw GITHUB_ENV:', __red);
-} catch (_e) {
-  console.log('Raw GITHUB_ENV: (unavailable)');
+// Debug logging utilities (disabled unless ?debug is present)
+var __qs = new URLSearchParams(window.location.search || '');
+var __DEBUG_ENABLED = (__qs.has('debug') && __qs.get('debug') !== '0');
+var __LOG = {
+  info: function(){ if(!__DEBUG_ENABLED) return; try { console.log.apply(console, arguments); } catch(_) {} },
+  warn: function(){ if(!__DEBUG_ENABLED) return; try { console.warn.apply(console, arguments); } catch(_) {} },
+  error: function(){ if(!__DEBUG_ENABLED) return; try { console.error.apply(console, arguments); } catch(_) {} }
+};
+if (__DEBUG_ENABLED) {
+  __LOG.info('Debug mode enabled for contact form.');
 }
-console.log('Proxy URL configured:', !!API_CONFIG.PROXY_URL, API_CONFIG.PROXY_URL || '');
-console.log('Using Proxy:', API_CONFIG.USE_PROXY);
-console.log('Environment variables available:', !!(window.GITHUB_ENV && window.GITHUB_ENV.BREVO_API_KEY));
-console.log('Using Brevo API (direct):', API_CONFIG.USE_BREVO);
-console.log('API Key configured:', !!API_CONFIG.BREVO_API_KEY);
-console.log('API Key length:', (API_CONFIG.BREVO_API_KEY ? API_CONFIG.BREVO_API_KEY.length : 0));
-console.log('TO_EMAIL:', API_CONFIG.TO_EMAIL);
-console.log('FROM_EMAIL:', API_CONFIG.FROM_EMAIL);
-        console.log('Ready for GitHub Pages deployment with Brevo integration!');
-        console.log('Testing environment variable injection...');
-        console.log('Build timestamp placeholder (local dev)');
-        console.log('Environment injection status: Checking...');
-        console.log('Force cache refresh...');
   // Allow forcing Google Forms fallback via URL param ?forceGForms=1
   var __qs = new URLSearchParams(window.location.search || '');
   var FORCE_GFORMS = (__qs.has('forceGForms') && __qs.get('forceGForms') === '1');
