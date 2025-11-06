@@ -4054,6 +4054,14 @@ ${message}
             try {
               var __now = Date.now();
               var __baseline = (window.__formFirstFocusAt || window.__formReadyAt || __now);
+              // Optional debug: log dwell metrics when ?debug=1
+              try {
+                var __q = new URLSearchParams(window.location.search || '');
+                var __dbg = (__q.has('debug') && __q.get('debug') !== '0');
+                if (__dbg && console && console.log) {
+                  console.log('Dwell check', { now: __now, readyAt: window.__formReadyAt, firstFocusAt: window.__formFirstFocusAt, delta: (__now - __baseline) });
+                }
+              } catch(_eDbg) {}
               if ((__now - __baseline) < 1200) { // ~1.2s min dwell
                 showFormMessage('השליחה מהירה מדי. אנא המתן רגע ושלח מחדש.', 'error');
                 return;
