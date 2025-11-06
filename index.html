@@ -2057,9 +2057,9 @@ body {
         </section>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
                 <div class="footer-col">
                     <h4>💼 Portfolio</h4>
                     <p class="footer-tagline">בונה פתרונות דיגיטליים מתקדמים</p>
@@ -2087,10 +2087,10 @@ body {
                             </svg>
                         </a>
                     </div>
-                </div>
-            </div>
         </div>
-    </footer>
+      </div>
+    </div>
+  </footer>
 
     <div id="projectModal" class="modal">
         <div class="modal-overlay" id="modalOverlay"></div>
@@ -2440,6 +2440,123 @@ ${message}
         }, true);
       });
     } catch(_e) {}
+    </script>
+    <!-- Self-test harness: run with ?selftest=1 -->
+    <script>
+    try { (function(){
+      var params = new URLSearchParams(window.location.search || '');
+      if (!params.has('selftest')) return;
+      var results = [];
+      function logResult(name, pass, info){
+        results.push({name:name, pass:!!pass, info:info});
+        console.log('[selftest]', name + ': ' + (pass?'PASS':'FAIL'), info||'');
+      }
+      var origFetch = window.fetch ? window.fetch.bind(window) : null;
+      var origOpen = window.open ? window.open.bind(window) : function(){};
+      var stage = 0;
+      function setupStage(s){ stage = s; }
+      if (origFetch) {
+        window.fetch = function(input, init){
+          try {
+            var url = (typeof input === 'string') ? input : (input && input.url) || '';
+            if (stage === 1) {
+              if (/formspree\.io\/f\//.test(url)) {
+                return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type':'application/json' } }));
+              }
+            }
+            if (stage === 2) {
+              if (/formspree\.io\/f\//.test(url)) {
+                return Promise.resolve(new Response('rate limited', { status: 429 }));
+              }
+              if (/docs\.google\.com\/forms\//.test(url)) {
+                return Promise.resolve(new Response('', { status: 200 }));
+              }
+            }
+            if (stage === 3) {
+              if (/formspree\.io\/f\//.test(url)) {
+                return Promise.resolve(new Response('server error', { status: 500 }));
+              }
+              if (/docs\.google\.com\/forms\//.test(url)) {
+                return Promise.reject(new Error('network failed'));
+              }
+            }
+          } catch(e) { /* fallthrough */ }
+          return origFetch ? origFetch(input, init) : Promise.reject(new Error('fetch not available'));
+        };
+      }
+      var lastMailto = null;
+      window.open = function(url, target){
+        if (params.has('selftest') && typeof url === 'string' && url.indexOf('mailto:') === 0) {
+          lastMailto = url;
+          console.log('[selftest] mailto intercepted', url);
+          return null;
+        }
+        try { return origOpen(url, target); } catch(e) { return null; }
+      };
+      function fillAndSubmit(){
+        var f = document.getElementById('contactForm');
+        if (!f) { logResult('form exists', false, 'contactForm not found'); return; }
+        var name=document.getElementById('name');
+        var email=document.getElementById('email');
+        var subject=document.getElementById('subject');
+        var message=document.getElementById('message');
+        if(name) name.value='Test User';
+        if(email) email.value='test@example.com';
+        if(subject) subject.value='question';
+        if(message) message.value='Hello from selftest message content';
+        var evt = new Event('submit', { bubbles:true, cancelable:true });
+        f.dispatchEvent(evt);
+      }
+      function waitForMessage(cb){
+        var el = document.getElementById('formMessage');
+        var tries = 0;
+        var iv = setInterval(function(){
+          tries++;
+          if (el && el.style.display !== 'none' && (el.textContent||'').trim().length > 0) {
+            clearInterval(iv);
+            cb((el.textContent||'').trim());
+          } else if (tries > 50) { // ~5s
+            clearInterval(iv);
+            cb(null);
+          }
+        }, 100);
+      }
+      document.addEventListener('DOMContentLoaded', function(){
+        try { API_CONFIG.FORMSPREE_ID = API_CONFIG.FORMSPREE_ID || 'TEST'; } catch(e){}
+        try { window.FORCE_GFORMS = false; } catch(e){}
+        setupStage(1);
+        fillAndSubmit();
+        waitForMessage(function(msg1){
+          logResult('Formspree success', !!msg1 && /ההודעה נשלחה/.test(msg1), msg1);
+          setTimeout(function(){
+            setupStage(2);
+            try { window.FORCE_GFORMS = true; } catch(e){}
+            fillAndSubmit();
+            waitForMessage(function(msg2){
+              logResult('Google Forms success', !!msg2 && /Google Forms/.test(msg2), msg2);
+              setTimeout(function(){
+                setupStage(3);
+                try { window.FORCE_GFORMS = false; } catch(e){}
+                lastMailto = null;
+                fillAndSubmit();
+                setTimeout(function(){
+                  logResult('mailto fallback', !!lastMailto && lastMailto.indexOf('mailto:') === 0, lastMailto);
+                  try {
+                    var wrap = document.createElement('div');
+                    wrap.style.position='fixed';wrap.style.top='12px';wrap.style.left='12px';wrap.style.zIndex='99999';wrap.style.background='rgba(0,0,0,0.85)';wrap.style.color='#fff';wrap.style.padding='10px 12px';wrap.style.borderRadius='8px';wrap.style.font='12px ui-monospace, SFMono-Regular, Menlo, monospace';
+                    var html = '<div style="font-weight:700;margin-bottom:6px">Self-test</div>';
+                    for (var i=0;i<results.length;i++){ var r=results[i]; html += '<div>'+r.name+': <b style="color:'+(r.pass?'#10b981':'#ef4444')+'">'+(r.pass?'PASS':'FAIL')+'</b></div>'; }
+                    wrap.innerHTML = html;
+                    document.body.appendChild(wrap);
+                    console.log('[selftest] results', results);
+                  } catch(e) {}
+                }, 1200);
+              }, 400);
+            });
+          }, 400);
+        });
+      });
+    })(); } catch(e){ console.warn('selftest init failed', e); }
     </script>
   </body>
 </html>

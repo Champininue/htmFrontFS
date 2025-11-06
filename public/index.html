@@ -1,121 +1,5 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- reCAPTCHA v3 script will be loaded dynamically when needed -->
     
-    <meta name="description" content="פורטפוליו מקצועי של מפתח Full Stack המתמחה ב-React, Node.js, Python ואינטגרציות AI">
-    <title>פורטפוליו מתקדם - מפתח Full Stack &amp; AI</title>
-  <link rel="icon" href="data:,">
-    <style>
-/* Design System Variables */
-:root {
-  --color-bg: #ffffff;
-  --color-surface: #f8fafc;
-  --color-text: #1e293b;
-  --color-text-secondary: #64748b;
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
-  --color-primary-active: #1d4ed8;
-  --color-secondary: #10b981;
-  --color-accent: #8b5cf6;
-  --color-border: #e2e8f0;
-  --color-error: #ef4444;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  --gradient-warm: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-  --space-2xl: 48px;
-  --space-3xl: 64px;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-size-xs: 12px;
-  --font-size-sm: 14px;
-  --font-size-base: 16px;
-  --font-size-lg: 18px;
-  --font-size-xl: 20px;
-  --font-size-2xl: 24px;
-  --font-size-3xl: 32px;
-  --font-size-4xl: 48px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
-  --transition-fast: 150ms ease-in-out;
-  --transition-base: 300ms ease-in-out;
-  --transition-slow: 500ms ease-in-out;
-  --z-nav: 1000;
-  --z-modal: 2000;
-  --z-loading: 3000;
-}
-
-[data-theme="dark"] {
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-text: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-primary: #60a5fa;
-  --color-primary-hover: #3b82f6;
-  --color-primary-active: #2563eb;
-  --color-secondary: #34d399;
-  --color-accent: #a78bfa;
-  --color-border: #334155;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.6);
-}
-
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-  font-size: 16px;
-}
-
-body {
-  font-family: var(--font-sans);
-  font-size: var(--font-size-base);
-  line-height: 1.6;
-  color: var(--color-text);
-  background-color: var(--color-bg);
-  transition: background-color var(--transition-base), color var(--transition-base);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-::selection {
-  background-color: var(--color-primary);
-  color: white;
-}
-
-::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-surface);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
-  border-radius: var(--radius-full);
   border: 2px solid var(--color-surface);
   transition: background var(--transition-fast);
 }
@@ -2094,7 +1978,124 @@ body {
         </div>
     </div>
 
+  <!-- Self-test harness: run with ?selftest=1 -->
     <script>
+    try { (function(){
+      var params = new URLSearchParams(window.location.search || '');
+      if (!params.has('selftest')) return;
+      var results = [];
+      function logResult(name, pass, info){
+        results.push({name:name, pass:!!pass, info:info});
+        console.log('[selftest]', name + ': ' + (pass?'PASS':'FAIL'), info||'');
+      }
+      var origFetch = window.fetch ? window.fetch.bind(window) : null;
+      var origOpen = window.open ? window.open.bind(window) : function(){};
+      var stage = 0;
+      function setupStage(s){ stage = s; }
+      if (origFetch) {
+        window.fetch = function(input, init){
+          try {
+            var url = (typeof input === 'string') ? input : (input && input.url) || '';
+            if (stage === 1) {
+              if (/formspree\.io\/f\//.test(url)) {
+                return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type':'application/json' } }));
+              }
+            }
+            if (stage === 2) {
+              if (/formspree\.io\/f\//.test(url)) {
+                return Promise.resolve(new Response('rate limited', { status: 429 }));
+              }
+              if (/docs\.google\.com\/forms\//.test(url)) {
+                return Promise.resolve(new Response('', { status: 200 }));
+              }
+            }
+            if (stage === 3) {
+              if (/formspree\.io\/f\//.test(url)) {
+                return Promise.resolve(new Response('server error', { status: 500 }));
+              }
+              if (/docs\.google\.com\/forms\//.test(url)) {
+                return Promise.reject(new Error('network failed'));
+              }
+            }
+          } catch(e) { /* fallthrough */ }
+          return origFetch ? origFetch(input, init) : Promise.reject(new Error('fetch not available'));
+        };
+      }
+      var lastMailto = null;
+      window.open = function(url, target){
+        if (params.has('selftest') && typeof url === 'string' && url.indexOf('mailto:') === 0) {
+          lastMailto = url;
+          console.log('[selftest] mailto intercepted', url);
+          return null;
+        }
+        try { return origOpen(url, target); } catch(e) { return null; }
+      };
+      function fillAndSubmit(){
+        var f = document.getElementById('contactForm');
+        if (!f) { logResult('form exists', false, 'contactForm not found'); return; }
+        var name=document.getElementById('name');
+        var email=document.getElementById('email');
+        var subject=document.getElementById('subject');
+        var message=document.getElementById('message');
+        if(name) name.value='Test User';
+        if(email) email.value='test@example.com';
+        if(subject) subject.value='question';
+        if(message) message.value='Hello from selftest message content';
+        var evt = new Event('submit', { bubbles:true, cancelable:true });
+        f.dispatchEvent(evt);
+      }
+      function waitForMessage(cb){
+        var el = document.getElementById('formMessage');
+        var tries = 0;
+        var iv = setInterval(function(){
+          tries++;
+          if (el && el.style.display !== 'none' && (el.textContent||'').trim().length > 0) {
+            clearInterval(iv);
+            cb((el.textContent||'').trim());
+          } else if (tries > 50) { // ~5s
+            clearInterval(iv);
+            cb(null);
+          }
+        }, 100);
+      }
+      document.addEventListener('DOMContentLoaded', function(){
+        try { API_CONFIG.FORMSPREE_ID = API_CONFIG.FORMSPREE_ID || 'TEST'; } catch(e){}
+        try { window.FORCE_GFORMS = false; } catch(e){}
+        setupStage(1);
+        fillAndSubmit();
+        waitForMessage(function(msg1){
+          logResult('Formspree success', !!msg1 && /ההודעה נשלחה/.test(msg1), msg1);
+          setTimeout(function(){
+            setupStage(2);
+            try { window.FORCE_GFORMS = true; } catch(e){}
+            fillAndSubmit();
+            waitForMessage(function(msg2){
+              logResult('Google Forms success', !!msg2 && /Google Forms/.test(msg2), msg2);
+              setTimeout(function(){
+                setupStage(3);
+                try { window.FORCE_GFORMS = false; } catch(e){}
+                lastMailto = null;
+                fillAndSubmit();
+                setTimeout(function(){
+                  logResult('mailto fallback', !!lastMailto && lastMailto.indexOf('mailto:') === 0, lastMailto);
+                  try {
+                    var wrap = document.createElement('div');
+                    wrap.style.position='fixed';wrap.style.top='12px';wrap.style.left='12px';wrap.style.zIndex='99999';wrap.style.background='rgba(0,0,0,0.85)';wrap.style.color='#fff';wrap.style.padding='10px 12px';wrap.style.borderRadius='8px';wrap.style.font='12px ui-monospace, SFMono-Regular, Menlo, monospace';
+                    var html = '<div style="font-weight:700;margin-bottom:6px">Self-test</div>';
+                    for (var i=0;i<results.length;i++){ var r=results[i]; html += '<div>'+r.name+': <b style="color:'+(r.pass?'#10b981':'#ef4444')+'">'+(r.pass?'PASS':'FAIL')+'</b></div>'; }
+                    wrap.innerHTML = html;
+                    document.body.appendChild(wrap);
+                    console.log('[selftest] results', results);
+                  } catch(e) {}
+                }, 1200);
+              }, 400);
+            });
+          }, 400);
+        });
+      });
+    })(); } catch(e){ console.warn('selftest init failed', e); }
+  </script>
+  <script>
 // GitHub Environment Variables Injection (injected during GitHub Actions build)
 window.GITHUB_ENV = {
   BREVO_API_KEY: 'INJECT_BREVO_API_KEY',
