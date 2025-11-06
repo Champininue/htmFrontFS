@@ -26,6 +26,14 @@ const envVars = {
     RECAPTCHA_SITE_KEY: process.env.RECAPTCHA_SITE_KEY || ''
 };
 
+// Sanitize values to avoid breaking inline JS (remove newlines and trim)
+Object.keys(envVars).forEach((key) => {
+    const val = envVars[key];
+    if (typeof val === 'string') {
+        envVars[key] = val.replace(/\r?\n/g, '').trim();
+    }
+});
+
 // Log what we're working with
 console.log('🔍 Environment variable status:');
 console.log(`  BREVO_API_KEY: ${envVars.BREVO_API_KEY ? '✅ Set' : '❌ Missing (will use fallback)'}`);
