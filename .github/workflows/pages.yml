@@ -2,69 +2,6 @@ name: Deploy to GitHub Pages (inject env)
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    env:
-      FORMSPREE_ID: ${{ secrets.FORMSPREE_ID }}
-      FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
-      TO_EMAIL: ${{ secrets.TO_EMAIL }}
-      RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}
-      PROXY_URL: ${{ secrets.PROXY_URL }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Inject environment values into HTML
-        shell: bash
-        run: |
-          set -euo pipefail
-          files=(index.html public/index.html index.min.html)
-          for f in "${files[@]}"; do
-            if [[ -f "$f" ]]; then
-              echo "Injecting into $f"
-              sed -i "s|INJECT_FORMSPREE_ID|${FORMSPREE_ID:-}|g" "$f"
-              sed -i "s|INJECT_FROM_EMAIL|${FROM_EMAIL:-}|g" "$f"
-              sed -i "s|INJECT_TO_EMAIL|${TO_EMAIL:-}|g" "$f"
-              sed -i "s|INJECT_RECAPTCHA_SITE_KEY|${RECAPTCHA_SITE_KEY:-}|g" "$f"
-              sed -i "s|INJECT_PROXY_URL|${PROXY_URL:-}|g" "$f"
-            fi
-          done
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-name: Deploy to GitHub Pages (inject env)
-
-on:
-  push:
     branches: [ main ]
   workflow_dispatch:
 
@@ -74,7 +11,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: true
 
 jobs:
@@ -95,7 +32,7 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
-          files=(index.html public/index.html)
+          files=(index.html public/index.html index.min.html)
           for f in "${files[@]}"; do
             if [[ -f "$f" ]]; then
               echo "Injecting env into $f"
@@ -115,11 +52,11 @@ jobs:
           path: .
 
   deploy:
+    runs-on: ubuntu-latest
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
