@@ -2127,7 +2127,17 @@ window.GITHUB_ENV = {
 
 // Compute environment values safely (avoid parser issues on some browsers)
 var injected = window.GITHUB_ENV || {};
-function __cleanVal(v){ try { return (typeof v === 'string') ? v.replace(/\r?\n/g,'').trim() : v; } catch(e){ return v; } }
+function __cleanVal(v){
+  try {
+    if (typeof v === 'string') {
+      var s = v.replace(/\r?\n/g,'').trim();
+      // Treat unreplaced placeholders like empty so UI/debug doesn't show bogus values
+      if (s.indexOf('INJECT_') === 0) return '';
+      return s;
+    }
+    return v;
+  } catch(e){ return v; }
+}
 // Rely on CI to block leftover placeholders; just clean and use values here
 var BREVO_API_KEY = injected.BREVO_API_KEY ? __cleanVal(injected.BREVO_API_KEY) : '';
 var FROM_EMAIL = injected.FROM_EMAIL ? __cleanVal(injected.FROM_EMAIL) : 'optimussdf619@gmail.com';
@@ -2208,7 +2218,8 @@ if (__DEBUG_ENABLED) { __LOG.info('Debug mode enabled for contact form.'); }
       wrap.style.fontSize = '12px';
       wrap.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)';
       var keyLen = (API_CONFIG && API_CONFIG.BREVO_API_KEY) ? String(API_CONFIG.BREVO_API_KEY).length : 0;
-      wrap.innerHTML = '<div style="font-weight:700;margin-bottom:6px">Debug</div>'+
+      wrap.innerHTML = ''+
+        '<div style="font-weight:700;margin-bottom:6px">Debug</div>'+
         '<div>Proxy enabled: <b>' + (!!(API_CONFIG && API_CONFIG.USE_PROXY)) + '</b></div>'+
         '<div>Proxy URL: <b style="word-break:break-all">' + (API_CONFIG && API_CONFIG.PROXY_URL ? API_CONFIG.PROXY_URL : '') + '</b></div>'+
         '<div>Formspree: <b>' + (!!(API_CONFIG && API_CONFIG.FORMSPREE_ID)) + '</b></div>'+
@@ -2220,6 +2231,8 @@ if (__DEBUG_ENABLED) { __LOG.info('Debug mode enabled for contact form.'); }
         '<div>Key length: <b>' + keyLen + '</b></div>'+
         '<div>FROM: <b>' + (API_CONFIG && API_CONFIG.FROM_EMAIL ? API_CONFIG.FROM_EMAIL : '') + '</b></div>'+
         '<div>TO: <b>' + (API_CONFIG && API_CONFIG.TO_EMAIL ? API_CONFIG.TO_EMAIL : '') + '</b></div>'+
+        '<div>Dwell baseline captured: <b>' + (!!window.__formFirstFocusAt) + '</b></div>'+
+        '<div>Dwell delta (ms): <b id="dbgDwellDelta">n/a</b></div>'+
         '<div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap">'+
           '<button id="dbgTestFS" style="padding:4px 8px;border-radius:6px;border:1px solid #444;background:#222;color:#fff;cursor:pointer">Test Formspree</button>'+
           '<button id="dbgTestGF" style="padding:4px 8px;border-radius:6px;border:1px solid #444;background:#222;color:#fff;cursor:pointer">Test Google Forms</button>'+
@@ -2232,6 +2245,11 @@ if (__DEBUG_ENABLED) { __LOG.info('Debug mode enabled for contact form.'); }
           var resEl = document.getElementById('dbgTestResult');
           var fsBtn = document.getElementById('dbgTestFS');
           var gfBtn = document.getElementById('dbgTestGF');
+          var dwellLabel = document.getElementById('dbgDwellDelta');
+          var updateDwell = function(){
+            try { if (!dwellLabel) return; var b = window.__formFirstFocusAt; dwellLabel.textContent = (b ? (Date.now() - b) : 'n/a'); } catch(_eUd) {}
+          };
+          setInterval(updateDwell, 500);
           if (fsBtn) {
             if (!(API_CONFIG && API_CONFIG.FORMSPREE_ID)) {
               fsBtn.title = 'Formspree not configured (set FORMSPREE_ID in repo secrets)';
