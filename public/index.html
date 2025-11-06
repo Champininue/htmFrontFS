@@ -3673,7 +3673,8 @@ window.GITHUB_ENV = {
   GFORMS_ENTRY_EMAIL: 'entry.1045781291',
   GFORMS_ENTRY_SUBJECT: 'entry.1065046570',
   GFORMS_ENTRY_MESSAGE: 'entry.1166974658',
-  GFORMS_ENTRY_UPDATES: 'entry.839337160'
+  GFORMS_ENTRY_UPDATES: 'entry.839337160',
+  DEBUG_ALLOW: 'INJECT_DEBUG_ALLOW'
 };
 
 // Compute environment values safely (avoid parser issues on some browsers)
@@ -3701,6 +3702,7 @@ var GFORMS_ENTRY_EMAIL = injected.GFORMS_ENTRY_EMAIL ? __cleanVal(injected.GFORM
 var GFORMS_ENTRY_SUBJECT = injected.GFORMS_ENTRY_SUBJECT ? __cleanVal(injected.GFORMS_ENTRY_SUBJECT) : '';
 var GFORMS_ENTRY_MESSAGE = injected.GFORMS_ENTRY_MESSAGE ? __cleanVal(injected.GFORMS_ENTRY_MESSAGE) : '';
 var GFORMS_ENTRY_UPDATES = injected.GFORMS_ENTRY_UPDATES ? __cleanVal(injected.GFORMS_ENTRY_UPDATES) : '';
+var DEBUG_ALLOW = injected.DEBUG_ALLOW ? __cleanVal(injected.DEBUG_ALLOW) : '';
 
 // Debug-only override: allow ?fsid=... to temporarily set Formspree ID (no secrets leaked)
 try {
@@ -3734,6 +3736,7 @@ const API_CONFIG = {
   GFORMS_ENTRY_SUBJECT: GFORMS_ENTRY_SUBJECT,
   GFORMS_ENTRY_MESSAGE: GFORMS_ENTRY_MESSAGE,
   GFORMS_ENTRY_UPDATES: GFORMS_ENTRY_UPDATES,
+  DEBUG_ALLOW: (String(DEBUG_ALLOW).toLowerCase() === 'true' || DEBUG_ALLOW === '1'),
     // Fallback configuration
     USE_MAILTO_FALLBACK: true
 };
@@ -3756,7 +3759,8 @@ try {
 
 // Debug logging utilities (disabled unless ?debug is present)
 var __qs = new URLSearchParams(window.location.search || '');
-var __DEBUG_ENABLED = (__qs.has('debug') && __qs.get('debug') !== '0');
+var __DEBUG_ALLOWED = !!(API_CONFIG && API_CONFIG.DEBUG_ALLOW);
+var __DEBUG_ENABLED = (__DEBUG_ALLOWED && __qs.has('debug') && __qs.get('debug') !== '0');
 var __LOG = {
   info: function(){ if(!__DEBUG_ENABLED) return; try { console.log.apply(console, arguments); } catch(_) {} },
   warn: function(){ if(!__DEBUG_ENABLED) return; try { console.warn.apply(console, arguments); } catch(_) {} },
@@ -3774,8 +3778,7 @@ __LOG.info('Force Google Forms (param):', FORCE_GFORMS);
 // Optional on-page debug overlay: show when URL has ?debug
 try {
   (function(){
-    var params = new URLSearchParams(window.location.search || '');
-    if (!params.has('debug')) return;
+  if (!__DEBUG_ENABLED) return;
     var wrap = document.createElement('div');
     wrap.setAttribute('dir','ltr');
     wrap.style.position = 'fixed';
@@ -4078,9 +4081,7 @@ ${message}
               var __baseline = (window.__formFirstFocusAt || null);
               // Optional debug: log dwell metrics when ?debug=1
               try {
-                var __q = new URLSearchParams(window.location.search || '');
-                var __dbg = (__q.has('debug') && __q.get('debug') !== '0');
-                if (__dbg && console && console.log) {
+                if (window.__DEBUG_ENABLED && console && console.log) {
                   console.log('Dwell check', { now: __now, readyAt: window.__formReadyAt, firstFocusAt: window.__formFirstFocusAt, baseline: __baseline, delta: (__baseline ? (__now - __baseline) : 'n/a (no interaction)') });
                 }
               } catch(_eDbg) {}
