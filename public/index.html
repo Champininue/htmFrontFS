@@ -2169,6 +2169,11 @@ console.log('TO_EMAIL:', API_CONFIG.TO_EMAIL);
 console.log('FROM_EMAIL:', API_CONFIG.FROM_EMAIL);
 console.log('Ready for GitHub Pages deployment with Brevo integration!');
 
+// Allow forcing Google Forms fallback via URL param ?forceGForms=1
+var __qs = new URLSearchParams(window.location.search || '');
+var FORCE_GFORMS = (__qs.has('forceGForms') && __qs.get('forceGForms') === '1');
+console.log('Force Google Forms (param):', FORCE_GFORMS);
+
 // Optional on-page debug overlay: show when URL has ?debug
 try {
   (function(){
@@ -2193,6 +2198,7 @@ try {
       '<div>Proxy URL: <b style="word-break:break-all">' + (API_CONFIG && API_CONFIG.PROXY_URL ? API_CONFIG.PROXY_URL : '') + '</b></div>'+
   '<div>Formspree: <b>' + (!!(API_CONFIG && API_CONFIG.FORMSPREE_ID)) + '</b></div>'+
     '<div>Google Forms: <b>' + (!!(API_CONFIG && API_CONFIG.GOOGLE_FORMS_ACTION)) + '</b></div>'+
+  '<div>Force GForms (?forceGForms=1): <b>' + (!!FORCE_GFORMS) + '</b></div>'+
       '<div>Brevo enabled (direct): <b>' + (!!(API_CONFIG && API_CONFIG.USE_BREVO)) + '</b></div>'+
       '<div>Key configured: <b>' + (!!(API_CONFIG && API_CONFIG.BREVO_API_KEY)) + '</b></div>'+
       '<div>Key length: <b>' + keyLen + '</b></div>'+
@@ -2394,7 +2400,6 @@ ${message}
     <!-- Formspree override moved inside document: capture-phase handler -->
     try {
       document.addEventListener('DOMContentLoaded', function(){
-        if (!(API_CONFIG && API_CONFIG.FORMSPREE_ID)) return;
         var form = document.getElementById('contactForm');
         if (!form) return;
         form.addEventListener('submit', async function(e){
@@ -2414,29 +2419,25 @@ ${message}
             if(btnText) btnText.style.display='none';
             if(btnLoader) btnLoader.style.display='flex';
             if(submitBtn) submitBtn.disabled=true;
-            var fsUrl='https://formspree.io/f/'+API_CONFIG.FORMSPREE_ID;
-            var hp=document.getElementById('hpField');
-            var fsPayload={name,email,subject,message,updates,_subject:'פנייה מהאתר - '+subject,_replyto:email,_language:'he',_gotcha:(hp&&hp.value)||''};
-            var fsResp = await fetch(fsUrl,{ method:'POST', headers:{ 'Accept':'application/json','Content-Type':'application/json' }, body: JSON.stringify(fsPayload) });
-            if (fsResp.ok) {
-              await fsResp.json().catch(function(){});
-              showFormMessage('ההודעה נשלחה בהצלחה! ✅ תודה על פנייתך.','success');
-              form.reset();
-              var cc=document.getElementById('charCount'); if(cc) cc.textContent='0';
-            } else {
-              var t = await fsResp.text();
-              throw new Error('Formspree error: '+fsResp.status+' - '+t);
+            var triedFs = false;
+            // Try Formspree first if configured (unless forced to Google Forms via param)
+            if (!FORCE_GFORMS && API_CONFIG && API_CONFIG.FORMSPREE_ID) {
+              triedFs = true;
+              var fsUrl='https://formspree.io/f/'+API_CONFIG.FORMSPREE_ID;
+              var hp=document.getElementById('hpField');
+              var fsPayload={name,email,subject,message,updates,_subject:'פנייה מהאתר - '+subject,_replyto:email,_language:'he',_gotcha:(hp&&hp.value)||''};
+              var fsResp = await fetch(fsUrl,{ method:'POST', headers:{ 'Accept':'application/json','Content-Type':'application/json' }, body: JSON.stringify(fsPayload) });
+              if (fsResp.ok) {
+                await fsResp.json().catch(function(){});
+                showFormMessage('ההודעה נשלחה בהצלחה! ✅ תודה על פנייתך.','success');
+                form.reset();
+                var cc=document.getElementById('charCount'); if(cc) cc.textContent='0';
+                return;
+              }
             }
-          } catch (err) {
-            console.error('Formspree submit failed:', err);
-            // Optional fallback to Google Forms if configured
-            try {
-              if (API_CONFIG && API_CONFIG.GOOGLE_FORMS_ACTION) {
-                var name=document.getElementById('name').value.trim();
-                var email=document.getElementById('email').value.trim();
-                var subject=document.getElementById('subject').value;
-                var message=document.getElementById('message').value.trim();
-                var updates=document.getElementById('updates').checked;
+            // If Formspree failed or not configured, try Google Forms if available
+            if (API_CONFIG && API_CONFIG.GOOGLE_FORMS_ACTION) {
+              try {
                 var fd = new FormData();
                 if (API_CONFIG.GFORMS_ENTRY_NAME) fd.append(API_CONFIG.GFORMS_ENTRY_NAME, name);
                 if (API_CONFIG.GFORMS_ENTRY_EMAIL) fd.append(API_CONFIG.GFORMS_ENTRY_EMAIL, email);
@@ -2447,22 +2448,21 @@ ${message}
                 showFormMessage('ההודעה נשלחה בהצלחה! ✅ (דרך Google Forms)','success');
                 form.reset(); var cc=document.getElementById('charCount'); if(cc) cc.textContent='0';
                 return;
+              } catch(gfErr) {
+                console.error('Google Forms submit failed:', gfErr);
+                if (triedFs) throw gfErr;
               }
-            } catch (gfErr) {
-              console.error('Google Forms submit failed:', gfErr);
             }
             // Final fallback to mailto
-            var name=document.getElementById('name').value.trim();
-            var email=document.getElementById('email').value.trim();
-            var subject=document.getElementById('subject').value;
-            var message=document.getElementById('message').value.trim();
-            var updates=document.getElementById('updates').checked;
             var emailSubject=encodeURIComponent('פנייה מהאתר - '+subject);
             var emailBody=encodeURIComponent('שלום,\n\nשם: '+name+'\nאימייל: '+email+'\nנושא: '+subject+'\n\nהודעה:\n'+message+'\n\nעדכונים: '+(updates?'כן':'לא')+'\n\n---\nנשלח מהאתר בתאריך: '+new Date().toLocaleString('he-IL')+'\n');
             var mailtoLink='mailto:'+API_CONFIG.TO_EMAIL+'?subject='+emailSubject+'&body='+emailBody;
             window.open(mailtoLink,'_blank');
             showFormMessage('🔄 נפתח חלון אימייל חדש! אנא שלח את ההודעה מהאימייל שלך.','info');
             form.reset(); var cc=document.getElementById('charCount'); if(cc) cc.textContent='0';
+          } catch (err) {
+            console.error('Unified submit failed:', err);
+            showFormMessage('שגיאה בשליחה. נסו שוב או שלחו אימייל ישיר.','error');
           } finally {
             var submitBtn=form.querySelector('.btn-submit');
             var btnText=submitBtn?submitBtn.querySelector('.btn-text'):null;
