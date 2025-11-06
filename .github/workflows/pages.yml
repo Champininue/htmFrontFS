@@ -49,26 +49,28 @@ jobs:
             fi
           done
 
-      - name: Generate minified HTML (index.min.html)
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Minify index.html -> index.min.html
+      - name: Minify HTML in-place (serve minified files)
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -f index.html ]]; then
-            npx --yes html-minifier-terser \
-              --collapse-whitespace \
-              --remove-comments \
-              --minify-css true \
-              --minify-js true \
-              --output index.min.html \
-              index.html
-            echo "Minified index.html to index.min.html"
-          else
-            echo "index.html not found; skipping minification" >&2
-          fi
+          shopt -s nullglob
+          files=(index.html public/index.html)
+          for f in "${files[@]}"; do
+            if [[ -f "$f" ]]; then
+              echo "Minifying $f in-place"
+              npx --yes html-minifier-terser \
+                --collapse-whitespace \
+                --remove-comments \
+                --minify-css true \
+                --minify-js true \
+                --output "$f" \
+                "$f"
+            fi
+          done
 
       - name: Verify env injection & summary
         shell: bash
