@@ -35,12 +35,28 @@ jobs:
           set -euo pipefail
           rm -rf dist
           mkdir -p dist
+          # Allowlist: copy only site content to dist
           rsync -a ./ dist/ \
-            --exclude '.git' \
-            --exclude '.github' \
-            --exclude 'node_modules' \
-            --exclude 'dist' \
-            --exclude 'build'
+            --include '/index.html' \
+            --include '/404.html' \
+            --include '/CNAME' \
+            --include '/public/***' \
+            --include '/assets/***' \
+            --include '/images/***' \
+            --include '/img/***' \
+            --include '/css/***' \
+            --include '/js/***' \
+            --include '/fonts/***' \
+            --include '/static/***' \
+            --include '/media/***' \
+            --include '/.well-known/***' \
+            --include '/robots.txt' \
+            --include '/sitemap.xml' \
+            --include '/manifest.json' \
+            --include '/site.webmanifest' \
+            --include '/favicon.*' \
+            --include '/favicon*' \
+            --exclude '*'
 
       - name: Inject env placeholders into HTML (in dist)
         shell: bash
@@ -59,6 +75,18 @@ jobs:
               [[ -n "${RECAPTCHA_SITE_KEY:-}" ]] && sed -i.bak "s/INJECT_RECAPTCHA_SITE_KEY/${RECAPTCHA_SITE_KEY}/g" "$f"
               [[ -n "${PROXY_URL:-}" ]] && sed -i.bak "s|INJECT_PROXY_URL|${PROXY_URL}|g" "$f"
               rm -f "$f.bak"
+            fi
+          done
+
+      - name: Record pre-minify sizes
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > dist/.size_pre.tsv
+          for f in dist/index.html dist/public/index.html; do
+            if [[ -f "$f" ]]; then
+              bytes=$(wc -c < "$f" | tr -d ' ')
+              echo -e "$f\t$bytes" >> dist/.size_pre.tsv
             fi
           done
 
@@ -82,6 +110,29 @@ jobs:
                 "$f"
             fi
           done
+
+      - name: Report size summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf "Size summary (bytes)\n"
+          printf "File\tBefore\tAfter\tDelta\tDelta%%\n"
+          while IFS=$'\t' read -r file before; do
+            [[ -z "$file" ]] && continue
+            if [[ -f "$file" ]]; then
+              after=$(wc -c < "$file" | tr -d ' ')
+              delta=$((after - before))
+              # Avoid floating point: print integer percent if possible
+              if [[ "$before" -gt 0 ]]; then
+                percent=$(( (after - before) * 100 / before ))
+              else
+                percent=0
+              fi
+              printf "%s\t%s\t%s\t%s\t%s%%\n" "$file" "$before" "$after" "$delta" "$percent"
+            else
+              printf "%s\t%s\t(missing)\t-\t-\n" "$file" "$before"
+            fi
+          done < dist/.size_pre.tsv || true
 
       - name: Verify env injection & summary (dist)
         shell: bash
@@ -108,10 +159,9 @@ jobs:
           echo "  PROXY_URL: $(mask "$PROXY_URL")"
           # Fail hard if critical secret absent (adjust if you want non-fatal)
           if [[ -z "${FORMSPREE_ID:-}" ]]; then
-            echo "::warning::FORMSPREE_ID not set; Formspree primary will be inactive."
+            echo "FORMSPREE_ID is required but missing; failing build." >&2
+            exit 1
           fi
-          # Optional: uncomment to force failure when missing
-          # if [[ -z "${FORMSPREE_ID:-}" ]]; then echo "Primary Formspree ID missing"; exit 1; fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
