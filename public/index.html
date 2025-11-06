@@ -3692,6 +3692,16 @@ var GFORMS_ENTRY_SUBJECT = injected.GFORMS_ENTRY_SUBJECT ? __cleanVal(injected.G
 var GFORMS_ENTRY_MESSAGE = injected.GFORMS_ENTRY_MESSAGE ? __cleanVal(injected.GFORMS_ENTRY_MESSAGE) : '';
 var GFORMS_ENTRY_UPDATES = injected.GFORMS_ENTRY_UPDATES ? __cleanVal(injected.GFORMS_ENTRY_UPDATES) : '';
 
+// Debug-only override: allow ?fsid=... to temporarily set Formspree ID (no secrets leaked)
+try {
+  var __qsp = new URLSearchParams(window.location.search || '');
+  var __debugTmp = (__qsp.has('debug') && __qsp.get('debug') !== '0');
+  var __ovFsid = __qsp.get('fsid');
+  if (__debugTmp && __ovFsid) {
+    FORMSPREE_ID = __cleanVal(__ovFsid);
+  }
+} catch(_e) {}
+
 // API Configuration - Proxy-first (no client secrets)
 const API_CONFIG = {
   // Primary: Proxy endpoint to send email without exposing secrets
@@ -3760,6 +3770,7 @@ try {
   '<div>Formspree: <b>' + (!!(API_CONFIG && API_CONFIG.FORMSPREE_ID)) + '</b></div>'+
     '<div>Google Forms: <b>' + (!!(API_CONFIG && API_CONFIG.GOOGLE_FORMS_ACTION)) + '</b></div>'+
   '<div>Force GForms (?forceGForms=1): <b>' + (!!FORCE_GFORMS) + '</b></div>'+
+      '<div>FS override (?fsid=): <b>' + (new URLSearchParams(location.search).has('fsid')) + '</b></div>'+
       '<div>Brevo enabled (direct): <b>' + (!!(API_CONFIG && API_CONFIG.USE_BREVO)) + '</b></div>'+
       '<div>Key configured: <b>' + (!!(API_CONFIG && API_CONFIG.BREVO_API_KEY)) + '</b></div>'+
       '<div>Key length: <b>' + keyLen + '</b></div>'+

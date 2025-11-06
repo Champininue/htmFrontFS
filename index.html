@@ -2141,6 +2141,16 @@ var GFORMS_ENTRY_SUBJECT = injected.GFORMS_ENTRY_SUBJECT ? __cleanVal(injected.G
 var GFORMS_ENTRY_MESSAGE = injected.GFORMS_ENTRY_MESSAGE ? __cleanVal(injected.GFORMS_ENTRY_MESSAGE) : '';
 var GFORMS_ENTRY_UPDATES = injected.GFORMS_ENTRY_UPDATES ? __cleanVal(injected.GFORMS_ENTRY_UPDATES) : '';
 
+// Debug-only override: allow ?fsid=... to temporarily set Formspree ID
+try {
+  var __qsp = new URLSearchParams(window.location.search || '');
+  var __debugTmp = (__qsp.has('debug') && __qsp.get('debug') !== '0');
+  var __ovFsid = __qsp.get('fsid');
+  if (__debugTmp && __ovFsid) {
+    FORMSPREE_ID = __cleanVal(__ovFsid);
+  }
+} catch(_e) {}
+
 // API Configuration - Proxy-first (no client secrets)
 const API_CONFIG = {
   // Primary: Proxy endpoint to send email without exposing secrets
