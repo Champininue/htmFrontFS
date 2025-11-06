@@ -1,12 +1,14 @@
-// Proxy-first override: hijack submit to use PROXY_URL if configured (capture to beat existing handler)
+ 
+// Formspree override: use Formspree if configured (also capture-phase)
 try {
   document.addEventListener('DOMContentLoaded', function(){
-    if (!(API_CONFIG && API_CONFIG.USE_PROXY && API_CONFIG.PROXY_URL)) return;
+    if (!(API_CONFIG && API_CONFIG.FORMSPREE_ID)) return;
     var form = document.getElementById('contactForm');
     if (!form) return;
     form.addEventListener('submit', async function(e){
       try {
         e.stopImmediatePropagation();
+        e.stopPropagation();
         e.preventDefault();
         var name=document.getElementById('name').value.trim();
         var email=document.getElementById('email').value.trim();
@@ -20,20 +22,22 @@ try {
         if(btnText) btnText.style.display='none';
         if(btnLoader) btnLoader.style.display='flex';
         if(submitBtn) submitBtn.disabled=true;
-        var payload = { name, email, subject, message, updates, source:'portfolio_site', timestamp:new Date().toISOString() };
-        var resp = await fetch(API_CONFIG.PROXY_URL, { method:'POST', mode:'cors', cache:'no-store', headers:{ 'Content-Type':'application/json', 'Accept':'application/json' }, body: JSON.stringify(payload) });
-        if (resp.ok) {
-          await resp.json().catch(function(){});
+  var fsUrl='https://formspree.io/f/'+API_CONFIG.FORMSPREE_ID;
+  var hp=document.getElementById('hpField');
+  var fsPayload={name,email,subject,message,updates,_subject:'פנייה מהאתר - '+subject,_replyto:email,_language:'he',_gotcha:(hp&&hp.value)||''};
+        var fsResp = await fetch(fsUrl,{ method:'POST', headers:{ 'Accept':'application/json','Content-Type':'application/json' }, body: JSON.stringify(fsPayload) });
+        if (fsResp.ok) {
+          await fsResp.json().catch(function(){});
           showFormMessage('ההודעה נשלחה בהצלחה! ✅ תודה על פנייתך.','success');
           form.reset();
           var cc=document.getElementById('charCount'); if(cc) cc.textContent='0';
         } else {
-          var t = await resp.text();
-          throw new Error('Proxy error: '+resp.status+' - '+t);
+          var t = await fsResp.text();
+          throw new Error('Formspree error: '+fsResp.status+' - '+t);
         }
       } catch (err) {
-        console.error('Proxy submit failed:', err);
-        // Fall back to existing handler (mailto) by programmatically opening mailto
+        console.error('Formspree submit failed:', err);
+        // Fallback to mailto
         var name=document.getElementById('name').value.trim();
         var email=document.getElementById('email').value.trim();
         var subject=document.getElementById('subject').value;
@@ -2046,6 +2050,8 @@ body {
                         </div>
                     </div>
           <form id="contactForm" class="contact-form" name="contact" method="POST">
+                        <!-- Honeypot field for spam bots (used with Formspree) -->
+                        <input type="text" id="hpField" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;" />
                         
                         <div class="form-group">
                             <label for="name">שם מלא *</label>
@@ -2157,7 +2163,8 @@ window.GITHUB_ENV = {
   FROM_EMAIL: 'INJECT_FROM_EMAIL',
   TO_EMAIL: 'INJECT_TO_EMAIL',
   RECAPTCHA_SITE_KEY: 'INJECT_RECAPTCHA_SITE_KEY',
-  PROXY_URL: 'INJECT_PROXY_URL'
+  PROXY_URL: 'INJECT_PROXY_URL',
+  FORMSPREE_ID: 'INJECT_FORMSPREE_ID'
 };
 
 // Compute environment values safely (avoid parser issues on some browsers)
@@ -2169,6 +2176,7 @@ var FROM_EMAIL = injected.FROM_EMAIL ? __cleanVal(injected.FROM_EMAIL) : 'optimu
 var TO_EMAIL = injected.TO_EMAIL ? __cleanVal(injected.TO_EMAIL) : 'optimussdf619@gmail.com';
 var RECAPTCHA_SITE_KEY = injected.RECAPTCHA_SITE_KEY ? __cleanVal(injected.RECAPTCHA_SITE_KEY) : '';
 var PROXY_URL = injected.PROXY_URL ? __cleanVal(injected.PROXY_URL) : '';
+var FORMSPREE_ID = injected.FORMSPREE_ID ? __cleanVal(injected.FORMSPREE_ID) : '';
 
 // API Configuration - Proxy-first (no client secrets)
 const API_CONFIG = {
@@ -2183,6 +2191,8 @@ const API_CONFIG = {
     FROM_EMAIL: FROM_EMAIL,
     TO_EMAIL: TO_EMAIL,
     RECAPTCHA_SITE_KEY: RECAPTCHA_SITE_KEY,
+  // Third-party static backend (no secrets)
+  FORMSPREE_ID: FORMSPREE_ID,
     // Fallback configuration
     USE_MAILTO_FALLBACK: true
 };
@@ -2194,6 +2204,7 @@ console.log('Proxy URL configured:', !!API_CONFIG.PROXY_URL, API_CONFIG.PROXY_UR
 console.log('Using Proxy:', API_CONFIG.USE_PROXY);
 console.log('Environment variables available:', !!(window.GITHUB_ENV && window.GITHUB_ENV.BREVO_API_KEY));
 console.log('Using Brevo API (direct):', API_CONFIG.USE_BREVO);
+console.log('Formspree configured:', !!API_CONFIG.FORMSPREE_ID);
 console.log('API Key configured:', !!API_CONFIG.BREVO_API_KEY);
 console.log('API Key length:', (API_CONFIG.BREVO_API_KEY ? API_CONFIG.BREVO_API_KEY.length : 0));
 console.log('TO_EMAIL:', API_CONFIG.TO_EMAIL);
@@ -2220,8 +2231,9 @@ try {
     wrap.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)';
     var keyLen = (API_CONFIG && API_CONFIG.BREVO_API_KEY) ? String(API_CONFIG.BREVO_API_KEY).length : 0;
     wrap.innerHTML = '<div style="font-weight:700;margin-bottom:6px">Debug</div>'+
-      '<div>Proxy enabled: <b>' + (!!(API_CONFIG && API_CONFIG.USE_PROXY)) + '</b></div>'+
+  '<div>Proxy enabled: <b>' + (!!(API_CONFIG && API_CONFIG.USE_PROXY)) + '</b></div>'+
       '<div>Proxy URL: <b style="word-break:break-all">' + (API_CONFIG && API_CONFIG.PROXY_URL ? API_CONFIG.PROXY_URL : '') + '</b></div>'+
+  '<div>Formspree: <b>' + (!!(API_CONFIG && API_CONFIG.FORMSPREE_ID)) + '</b></div>'+
       '<div>Brevo enabled (direct): <b>' + (!!(API_CONFIG && API_CONFIG.USE_BREVO)) + '</b></div>'+
       '<div>Key configured: <b>' + (!!(API_CONFIG && API_CONFIG.BREVO_API_KEY)) + '</b></div>'+
       '<div>Key length: <b>' + keyLen + '</b></div>'+

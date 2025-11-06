@@ -24,7 +24,8 @@ const envVars = {
     FROM_EMAIL: process.env.FROM_EMAIL || 'noreply@ship.brevo.com',
     TO_EMAIL: process.env.TO_EMAIL || 'ireactpro@gmail.com',
     RECAPTCHA_SITE_KEY: process.env.RECAPTCHA_SITE_KEY || '',
-    PROXY_URL: process.env.PROXY_URL || ''
+    PROXY_URL: process.env.PROXY_URL || '',
+    FORMSPREE_ID: process.env.FORMSPREE_ID || ''
 };
 
 // Sanitize values to avoid breaking inline JS (remove newlines and trim)
@@ -42,6 +43,7 @@ console.log(`  FROM_EMAIL: ${envVars.FROM_EMAIL}`);
 console.log(`  TO_EMAIL: ${envVars.TO_EMAIL}`);
 console.log(`  RECAPTCHA_SITE_KEY: ${envVars.RECAPTCHA_SITE_KEY ? '✅ Set' : '❌ Missing'}`);
 console.log(`  PROXY_URL: ${envVars.PROXY_URL ? envVars.PROXY_URL : '(empty)'}`);
+console.log(`  FORMSPREE_ID: ${envVars.FORMSPREE_ID ? envVars.FORMSPREE_ID : '(empty)'}`);
 console.log('');
 
 console.log('Environment variables:');
@@ -95,7 +97,7 @@ for (const htmlFile of files) {
     content += `\n<!-- build: ${new Date().toISOString()} -->\n`;
 
     // Sanity check: ensure no placeholders remain
-    const placeholderRegex = /(INJECT_(BREVO_API_KEY|FROM_EMAIL|TO_EMAIL|RECAPTCHA_SITE_KEY|PROXY_URL))|\{\{\s*(BREVO_API_KEY|FROM_EMAIL|TO_EMAIL|RECAPTCHA_SITE_KEY|PROXY_URL)\s*\}\}/g;
+    const placeholderRegex = /(INJECT_(BREVO_API_KEY|FROM_EMAIL|TO_EMAIL|RECAPTCHA_SITE_KEY|PROXY_URL|FORMSPREE_ID))|\{\{\s*(BREVO_API_KEY|FROM_EMAIL|TO_EMAIL|RECAPTCHA_SITE_KEY|PROXY_URL|FORMSPREE_ID)\s*\}\}/g;
     const leftovers = content.match(placeholderRegex);
     if (leftovers) {
         console.error('❌ Placeholder tokens still present after injection:', Array.from(new Set(leftovers)));
