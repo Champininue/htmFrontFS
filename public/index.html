@@ -3657,7 +3657,7 @@ body {
           }, 400);
         });
       });
-    })(); } catch(e){ console.warn('selftest init failed', e); }
+  })(); } catch(e){ __LOG.warn('selftest init failed'); }
   </script>
   <script>
 // GitHub Environment Variables Injection (injected during GitHub Actions build)
@@ -3765,9 +3765,54 @@ try {
       '<div>Key length: <b>' + keyLen + '</b></div>'+
       '<div>FROM: <b>' + (API_CONFIG && API_CONFIG.FROM_EMAIL ? API_CONFIG.FROM_EMAIL : '') + '</b></div>'+
       '<div>TO: <b>' + (API_CONFIG && API_CONFIG.TO_EMAIL ? API_CONFIG.TO_EMAIL : '') + '</b></div>'+
+      '<div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap">'+
+        '<button id="dbgTestFS" style="padding:4px 8px;border-radius:6px;border:1px solid #444;background:#222;color:#fff;cursor:pointer">Test Formspree</button>'+
+        '<button id="dbgTestGF" style="padding:4px 8px;border-radius:6px;border:1px solid #444;background:#222;color:#fff;cursor:pointer">Test Google Forms</button>'+
+        '<span id="dbgTestResult" style="margin-inline-start:8px;opacity:.9"></span>'+
+      '</div>'+
       '<div style="opacity:.7;margin-top:4px">v=' + Date.now() + '</div>';
     document.addEventListener('DOMContentLoaded', function(){
       try { document.body.appendChild(wrap); } catch(e) {}
+      try {
+        var resEl = document.getElementById('dbgTestResult');
+        var fsBtn = document.getElementById('dbgTestFS');
+        var gfBtn = document.getElementById('dbgTestGF');
+        if (fsBtn) {
+          fsBtn.disabled = !(API_CONFIG && API_CONFIG.FORMSPREE_ID);
+          fsBtn.addEventListener('click', async function(){
+            try {
+              if (!API_CONFIG || !API_CONFIG.FORMSPREE_ID) { resEl && (resEl.textContent = 'Formspree: not configured'); return; }
+              if (!confirm('Run a real Formspree test? This will send a test message.')) return;
+              var url = 'https://formspree.io/f/' + API_CONFIG.FORMSPREE_ID;
+              var payload = { name:'Debug Test', email: (API_CONFIG.FROM_EMAIL||'test@example.com'), subject:'DEBUG TEST', message:'Test ping from '+location.hostname+' at '+new Date().toISOString(), updates:false, _gotcha:'' };
+              var resp = await fetch(url, { method:'POST', headers:{ 'Accept':'application/json', 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+              var ok = !!(resp && resp.ok);
+              if (resEl) resEl.textContent = ok ? 'Formspree: PASS' : ('Formspree: FAIL '+(resp?resp.status:''));
+            } catch(_e) {
+              if (resEl) resEl.textContent = 'Formspree: FAIL';
+            }
+          });
+        }
+        if (gfBtn) {
+          gfBtn.disabled = !(API_CONFIG && API_CONFIG.GOOGLE_FORMS_ACTION);
+          gfBtn.addEventListener('click', async function(){
+            try {
+              if (!API_CONFIG || !API_CONFIG.GOOGLE_FORMS_ACTION) { resEl && (resEl.textContent = 'Google Forms: not configured'); return; }
+              if (!confirm('Run a real Google Forms test? This will create a test entry.')) return;
+              var fd = new FormData();
+              if (API_CONFIG.GFORMS_ENTRY_NAME) fd.append(API_CONFIG.GFORMS_ENTRY_NAME, 'Debug Test');
+              if (API_CONFIG.GFORMS_ENTRY_EMAIL) fd.append(API_CONFIG.GFORMS_ENTRY_EMAIL, (API_CONFIG.FROM_EMAIL||'test@example.com'));
+              if (API_CONFIG.GFORMS_ENTRY_SUBJECT) fd.append(API_CONFIG.GFORMS_ENTRY_SUBJECT, 'DEBUG TEST');
+              if (API_CONFIG.GFORMS_ENTRY_MESSAGE) fd.append(API_CONFIG.GFORMS_ENTRY_MESSAGE, 'Test ping from '+location.hostname+' at '+new Date().toISOString());
+              if (API_CONFIG.GFORMS_ENTRY_UPDATES) fd.append(API_CONFIG.GFORMS_ENTRY_UPDATES, 'No');
+              await fetch(API_CONFIG.GOOGLE_FORMS_ACTION, { method:'POST', mode:'no-cors', body: fd });
+              if (resEl) resEl.textContent = 'Google Forms: SENT (no-cors)';
+            } catch(_e2) {
+              if (resEl) resEl.textContent = 'Google Forms: FAIL';
+            }
+          });
+        }
+      } catch(_e3) { /* ignore */ }
     });
     try {
       var __red2 = Object.assign({}, window.GITHUB_ENV || {});
