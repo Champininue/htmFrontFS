@@ -48,6 +48,35 @@ jobs:
             fi
           done
 
+      - name: Verify env injection & summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(index.html public/index.html index.min.html)
+          placeholder_found=0
+          for f in "${files[@]}"; do
+            [[ -f "$f" ]] || continue
+            if grep -q 'INJECT_FORMSPREE_ID' "$f"; then
+              echo "::warning file=$f::FORMSPREE_ID placeholder still present (secret missing?)"
+              placeholder_found=1
+            else
+              echo "FORMSPREE_ID injected in $f"
+            fi
+          done
+          mask() { local v="$1"; if [[ -z "$v" ]]; then echo "(empty)"; else echo "${v:0:3}***${v: -3}"; fi; }
+          echo "Summary:" 
+          echo "  FORMSPREE_ID length: ${#FORMSPREE_ID}"
+          echo "  FROM_EMAIL: $(mask "$FROM_EMAIL")"
+          echo "  TO_EMAIL: $(mask "$TO_EMAIL")"
+          echo "  RECAPTCHA_SITE_KEY length: ${#RECAPTCHA_SITE_KEY}"
+          echo "  PROXY_URL: $(mask "$PROXY_URL")"
+          # Fail hard if critical secret absent (adjust if you want non-fatal)
+          if [[ -z "${FORMSPREE_ID:-}" ]]; then
+            echo "::warning::FORMSPREE_ID not set; Formspree primary will be inactive."
+          fi
+          # Optional: uncomment to force failure when missing
+          # if [[ -z "${FORMSPREE_ID:-}" ]]; then echo "Primary Formspree ID missing"; exit 1; fi
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
