@@ -3778,7 +3778,10 @@ try {
         var fsBtn = document.getElementById('dbgTestFS');
         var gfBtn = document.getElementById('dbgTestGF');
         if (fsBtn) {
-          fsBtn.disabled = !(API_CONFIG && API_CONFIG.FORMSPREE_ID);
+          // Keep button clickable; if not configured, clicking will show a helpful message
+          if (!(API_CONFIG && API_CONFIG.FORMSPREE_ID)) {
+            fsBtn.title = 'Formspree not configured (set FORMSPREE_ID in repo secrets)';
+          }
           fsBtn.addEventListener('click', async function(){
             try {
               if (!API_CONFIG || !API_CONFIG.FORMSPREE_ID) { resEl && (resEl.textContent = 'Formspree: not configured'); return; }
