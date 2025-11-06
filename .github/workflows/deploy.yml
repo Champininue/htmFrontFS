@@ -21,67 +21,76 @@ jobs:
     environment: github-pages
     
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
+      - name: Checkout
+        uses: actions/checkout@v4
         
-    - name: Prepare public artifact
-      run: |
-        echo "📦 Preparing artifact for Pages..."
-        if [ -f public/index.html ]; then
-          echo "✅ Using existing public/index.html"
-        else
-          echo "ℹ️ public/index.html not found, copying from repository root"
-          mkdir -p public
-          cp index.html public/
-        fi
-        ls -la public/
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Prepare public artifact
+        run: |
+          echo "📦 Preparing artifact for Pages..."
+          if [ -f public/index.html ]; then
+            echo "✅ Using existing public/index.html"
+          else
+            echo "ℹ️ public/index.html not found, copying from repository root"
+            mkdir -p public
+            cp index.html public/
+          fi
+          ls -la public/
+          
+      - name: Debug environment setup
+        run: |
+          echo "🔍 Checking environment variable availability..."
+          echo "BREVO_API_KEY exists: ${{ secrets.BREVO_API_KEY != '' }}"
+          echo "FROM_EMAIL (secret) exists: ${{ secrets.FROM_EMAIL != '' }}"
+          echo "FROM_EMAIL (var) exists: ${{ vars.FROM_EMAIL != '' }}"
+          echo "TO_EMAIL (secret) exists: ${{ secrets.TO_EMAIL != '' }}"
+          echo "TO_EMAIL (var) exists: ${{ vars.TO_EMAIL != '' }}"
+          echo "📁 Current directory: $(pwd)"
+          echo "📋 Directory contents:"
+          ls -la
+          echo "🔧 Build directory contents:"
+          ls -la build/ || echo "Build directory not found"
+          echo "📄 inject-env.js exists: $(test -f build/inject-env.js && echo 'YES' || echo 'NO')"
+          echo "🏗️ Public directory before injection:"
+          ls -la public/ || echo "Public directory not found"
+          
+      - name: Inject environment variables
+        run: |
+          echo "🚀 Running environment variable injection..."
+          node build/inject-env.js
+          echo "✅ Injection step completed"
+          echo "� Post-injection GITHUB_ENV snippet (public/index.html):"
+          if grep -n "window.GITHUB_ENV" -n public/index.html; then
+            # Print from the line after window.GITHUB_ENV until closing brace of the object
+            awk '/window.GITHUB_ENV\s*=\s*\{/{flag=1;print;next}/\};/{print;flag=0}flag' public/index.html | sed -n '1,40p'
+          else
+            echo "window.GITHUB_ENV block not found in public/index.html"
+          fi
+          echo "�📄 Checking for any remaining placeholders (should be none):"
+          if grep -Eq "INJECT_|\{\{" public/index.html; then
+            echo "❌ Placeholders still present in public/index.html"
+            grep -nE "INJECT_|\{\{" public/index.html | head -20
+            exit 1
+          else
+            echo "✅ No placeholders remain"
+          fi
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY || vars.BREVO_API_KEY }}
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL || vars.FROM_EMAIL }}
+          TO_EMAIL: ${{ secrets.TO_EMAIL || vars.TO_EMAIL }}
+          RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY || vars.RECAPTCHA_SITE_KEY }}
+          
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
         
-    - name: Debug environment setup
-      run: |
-        echo "🔍 Checking environment variable availability..."
-        echo "BREVO_API_KEY exists: ${{ secrets.BREVO_API_KEY != '' }}"
-        echo "FROM_EMAIL exists: ${{ vars.FROM_EMAIL != '' }}"
-        echo "TO_EMAIL exists: ${{ vars.TO_EMAIL != '' }}"
-        echo "📁 Current directory: $(pwd)"
-        echo "📋 Directory contents:"
-        ls -la
-        echo "🔧 Build directory contents:"
-        ls -la build/
-        echo "📄 inject-env.js exists: $(test -f build/inject-env.js && echo 'YES' || echo 'NO')"
-        echo "🏗️ Public directory before injection:"
-        ls -la public/ || echo "Public directory not found"
-        
-    - name: Inject environment variables
-      run: |
-        echo "🚀 Running environment variable injection..."
-        node build/inject-env.js
-        echo "✅ Injection step completed"
-        echo "📄 Checking for any remaining placeholders (should be none):"
-        if grep -Eq "INJECT_|\{\{" public/index.html; then
-          echo "❌ Placeholders still present in public/index.html"
-          grep -nE "INJECT_|\{\{" public/index.html | head -20
-          exit 1
-        else
-          echo "✅ No placeholders remain"
-        fi
-      env:
-        BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
-        FROM_EMAIL: ${{ vars.FROM_EMAIL }}
-        TO_EMAIL: ${{ vars.TO_EMAIL }}
-        RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}
-        
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-      
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: './public'
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './public'
 
   deploy:
     environment:
